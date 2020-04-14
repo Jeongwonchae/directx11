@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h" />
+    <ClInclude Include="ColorshaderClass.h" />
     <ClInclude Include="D3DClass.h" />
     <ClInclude Include="DxDefine.h" />
     <ClInclude Include="GraphicsClass.h" />
@@ -124,6 +125,7 @@
     <ClInclude Include="SystemClass.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ColorshaderClass.cpp" />
     <ClCompile Include="D3DClass.cpp" />
     <ClCompile Include="GraphicsClass.cpp" />
     <ClCompile Include="InputClass.cpp" />

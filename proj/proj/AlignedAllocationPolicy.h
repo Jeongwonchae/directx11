@@ -1,7 +1,7 @@
 #pragma once
 
 template<size_t Alignment>
-class AlgnedAllocationPolicy
+class AlignedAllocationPolicy
 {
 public:
 	static void* operator new(size_t size)
