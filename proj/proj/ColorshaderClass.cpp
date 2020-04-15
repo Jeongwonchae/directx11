@@ -18,10 +18,10 @@ ColorShaderClass::~ColorShaderClass()
 bool ColorShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 {
 	//정점 및 픽셀 쉐이더를 초기화
-	WCHAR* vsFilename = new WCHAR[sizeof("../proj/color.vs")];
-	WCHAR* psFilename = new WCHAR[sizeof("../proj/color.ps")];
-	wcscpy(vsFilename, L"../proj/color.vs");
-	wcscpy(psFilename, L"../proj/color.ps");
+	WCHAR* vsFilename = new WCHAR[sizeof("../proj/Color.vs")];
+	WCHAR* psFilename = new WCHAR[sizeof("../proj/Color.ps")];
+	wcscpy(vsFilename, L"../proj/Color.vs");
+	wcscpy(psFilename, L"../proj/Color.ps");
 	return InitializeShader(device, hwnd, vsFilename, psFilename);
 }
 
@@ -71,7 +71,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 
 	// 픽셀 셰이더 코드를 컴파일
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	if (FAILED(D3DCompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_5", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage)))
+	if (FAILED(D3DCompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage)))
 	{
 		if (errorMessage)
 		{
@@ -98,7 +98,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	//정점 입력 레이아웃 구조체 설정
 	// 이 설정은 ModeClass와 셰이더의 VertexType 구조와 일치해야한다고한다
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
-	polygonLayout[0].SemanticName = "POSIOTION";
+	polygonLayout[0].SemanticName = "POSITION";
 	polygonLayout[0].SemanticIndex = 0;
 	polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 	polygonLayout[0].InputSlot = 0;

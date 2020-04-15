@@ -404,19 +404,19 @@ ID3D11DeviceContext * D3DClass::GetDeviceContext()
 	return m_deviceContext;
 }
 
-void D3DClass::GetProjectionMatrix(XMMATRIX &)
+void D3DClass::GetProjectionMatrix(XMMATRIX &projectionMatrix)
 {
-	m_projectionMatrix = m_projectionMatrix;
+	projectionMatrix = m_projectionMatrix;
 }
 
-void D3DClass::GetWorldMatrix(XMMATRIX &)
+void D3DClass::GetWorldMatrix(XMMATRIX &worldMatrix)
 {
-	m_worldMatrix = m_worldMatrix;
+	worldMatrix = m_worldMatrix;
 }
 
-void D3DClass::GetOrthoMatrix(XMMATRIX &)
+void D3DClass::GetOrthoMatrix(XMMATRIX &orthoMatrix)
 {
-	m_orthoMatrix = m_orthoMatrix;
+	orthoMatrix = m_orthoMatrix;
 }
 
 void D3DClass::GetVideoCardInfo(char *cardName, int &memory)
