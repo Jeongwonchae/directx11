@@ -10,17 +10,17 @@ cbuffer MatrixBuffer
 struct VertexInputType
 {
 	float4 position : POSITION;
-	float4 color : COLOR;
+	float2 tex: TEXCOORD0;
 };
 
 struct PixelInputType
 {
 	float4 position : SV_POSITION;
-	float4 color : COLOR;
+	float2 tex : TEXCOORD0;
 };
 
 //Vertex Shader
-PixelInputType ColorVertexShader(VertexInputType input)
+PixelInputType TextureVertexShader(VertexInputType input)
 {
 	PixelInputType output;
 
@@ -33,7 +33,7 @@ PixelInputType ColorVertexShader(VertexInputType input)
 	output.position = mul(output.position, projectionMatrix);
 
 	//픽셀 쉐이더가 사용할 입력 색상을 저장
-	output.color = input.color;
+	output.tex = input.tex;
 
 	return output;
 }
