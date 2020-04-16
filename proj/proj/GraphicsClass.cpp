@@ -3,7 +3,8 @@
 #include "D3DClass.h"
 #include "Cameraclass.h"
 #include "Modelclass.h"
-#include "TextureShaderClass.h"
+#include "LightClass.h"
+#include "LightShaderClass.h"
 #include "Graphicsclass.h"
 
 GraphicsClass::GraphicsClass()
@@ -53,40 +54,57 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Model 객체 초기화
-	char* Filename = new char[sizeof("../proj/data/stone01.tga")];
-	strcpy(Filename, "../proj/data/stone01.tga");
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(),
-		Filename))
+	WCHAR* Filename = new WCHAR[sizeof("../proj/data/seafloor.dds")];
+	wcscpy(Filename, L"../proj/data/seafloor.dds");
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), Filename))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
-	// m_TextureShader 객체 생성
-	m_TextureShader = new TextureShaderClass;
-	if (!m_TextureShader)
+	// m_LightShader 객체 생성
+	m_LightShader = new LightShaderClass;
+	if (!m_LightShader)
 	{
 		return false;
 	}
 
-	// m_ColorShader 객체 초기화
-	if (!m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd))
+	// m_LightShader 객체 초기화
+	if (!m_LightShader->Initialize(m_Direct3D->GetDevice(), hwnd))
 	{
 		MessageBox(hwnd, L"Could not initialize the Texture shader object.", L"Error", MB_OK);
 		return false;
 	}
+
+	// m_Light 객체 생성
+	m_Light = new LightClass;
+	if (!m_Light)
+	{
+		return false;
+	}
+
+	//m_Light 객체 초기화
+	m_Light->SetDiffuseColor(1.0f, 0.0f, 1.0f, 1.0f);
+	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 
 	return true;
 }
 
 void GraphicsClass::Shutdown()
 {
-	// m_TextureShader 객체 반환
-	if (m_TextureShader)
+	// m_Light 객체 반환
+	if (m_Light)
 	{
-		m_TextureShader->Shutdown();
-		delete m_TextureShader;
-		m_TextureShader = 0;
+		delete m_Light;
+		m_Light = 0;
+	}
+
+	// m_LightShader 객체 반환
+	if (m_LightShader)
+	{
+		m_LightShader->Shutdown();
+		delete m_LightShader;
+		m_LightShader = 0;
 	}
 
 	// m_Model 객체 반환
@@ -115,10 +133,19 @@ void GraphicsClass::Shutdown()
 
 bool GraphicsClass::Frame()
 {
-	return Render();
+	static float rotation = 0.0f;
+
+	//각 프레임의 rotation 변수를 업데이트
+	rotation += (float)XM_PI * 0.01f;
+	if (rotation > 360.0f)
+	{
+		rotation -= 360.0f;
+	}
+
+	return Render(rotation);
 }
 
-bool GraphicsClass::Render()
+bool GraphicsClass::Render(float rotation)
 {
 	// 씬을 그리기 위해 버퍼를 지움
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -132,11 +159,15 @@ bool GraphicsClass::Render()
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
+	//삼각형이 회전 할 수 있도록 회전 값으로 월드 행렬을 회전
+	worldMatrix = XMMatrixRotationY(rotation);
+
 	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	// 색상 쉐이더를 사용하여 모델을 렌더링
-	if (!m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture()))
+	if (!m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(),
+		m_Light->GetDirection(), m_Light->GetDiffuseColor()))
 	{
 		return false;
 	}

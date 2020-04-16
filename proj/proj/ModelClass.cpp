@@ -15,7 +15,7 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::Initialize(ID3D11Device *device, ID3D11DeviceContext *deviceContext, char *textureFilename)
+bool ModelClass::Initialize(ID3D11Device *device,  WCHAR *textureFilename)
 {
 	//정점 및 익덱스 버퍼를 초기화
 	if (!InitializeBuffers(device))
@@ -24,7 +24,7 @@ bool ModelClass::Initialize(ID3D11Device *device, ID3D11DeviceContext *deviceCon
 	} 
 
 	//이 모덱의 텍스처를 로드
-	return LoadTexture(device, deviceContext, textureFilename);
+	return LoadTexture(device, textureFilename);
 }
 
 void ModelClass::Shutdown()
@@ -75,13 +75,13 @@ bool ModelClass::InitializeBuffers(ID3D11Device *device)
 	}
 
 	//정점 배열에 데이터를 설정
-	vertices[0].postion = XMFLOAT3(-1.0f, -1.0f, 0.0f); //bottom left
+	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f); //bottom left
 	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
 
-	vertices[1].postion = XMFLOAT3(0.0f, 1.0f, 0.0f); //top middle
+	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f); //top middle
 	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
 
-	vertices[2].postion = XMFLOAT3(1.0f, -1.0f, 0.0f); //bottom right
+	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f); //bottom right
 	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
 	//인덱스 배열의 값을 설정
@@ -109,6 +109,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device *device)
 	{
 		return false;
 	}
+
 	// 정적 인덱스 버퍼의 구조체를 설정
 	D3D11_BUFFER_DESC indexBufferDesc;
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -173,7 +174,7 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext *deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-bool ModelClass::LoadTexture(ID3D11Device *device, ID3D11DeviceContext *deviceContext, char *filename)
+bool ModelClass::LoadTexture(ID3D11Device *device, WCHAR *filename)
 {
 	//텍스처 오브젝트를 생성
 	m_Texture = new TextureClass;
@@ -183,7 +184,7 @@ bool ModelClass::LoadTexture(ID3D11Device *device, ID3D11DeviceContext *deviceCo
 	}
 
 	//텍스처 오브젝트를 초기화
-	return m_Texture->Initialize(device, deviceContext, filename);
+	return m_Texture->Initialize(device, filename);
 }
 
 void ModelClass::ReleaseTexture()
