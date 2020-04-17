@@ -54,9 +54,11 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Model °´Ã¼ ÃÊ±âÈ­
-	WCHAR* Filename = new WCHAR[sizeof("../proj/data/seafloor.dds")];
-	wcscpy(Filename, L"../proj/data/seafloor.dds");
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), Filename))
+	WCHAR* ddsFilename = new WCHAR[sizeof("../proj/data/seafloor.dds")];
+	char* modelFilename = new char[sizeof("../proj/data/cube.txt")];
+	wcscpy(ddsFilename, L"../proj/data/seafloor.dds");
+	strcpy(modelFilename, "../proj/data/cube.txt");
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), modelFilename, ddsFilename))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
@@ -84,7 +86,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//m_Light °´Ã¼ ÃÊ±âÈ­
-	m_Light->SetDiffuseColor(1.0f, 0.0f, 1.0f, 1.0f);
+	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 
 	return true;
