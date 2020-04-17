@@ -3,7 +3,7 @@
 #include "LightShaderClass.h"
 
 LightShaderClass::LightShaderClass()
-{ 
+{
 }
 
 LightShaderClass::LightShaderClass(const LightShaderClass &)
@@ -33,10 +33,10 @@ void LightShaderClass::Shutdown()
 
 bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount,
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView *texture,
-	XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor)
 {
 	//렌더링에 사용할 셰이더 매개 변수를 설정
-	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, diffuseColor))
+	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, ambientColor, diffuseColor))
 	{
 		return false;
 	}
@@ -178,7 +178,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	matrixBufferDesc.StructureByteStride = 0;
 
 	//상수 버퍼 포인터를 만들어 이 클래스에서 정점 셰이더 상수 버퍼에 점근할 수 있게 함
-	if (FAILED(device->CreateBuffer(&matrixBufferDesc,NULL, &m_matrixBuffer)))
+	if (FAILED(device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer)))
 	{
 		return false;
 	}
@@ -263,7 +263,7 @@ void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView *texture,
-	XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor)
 {
 	//행렬을 transpose하여 셰이더에서 사용 할 수 있게함
 	worldMatrix = XMMatrixTranspose(worldMatrix);
@@ -272,7 +272,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
 
 	//상수 버퍼의 내용을 쓸 수 있도록 잠금
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	if (FAILED(deviceContext->Map(m_matrixBuffer,0,D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	if (FAILED(deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
 	{
 		return false;
 	}
@@ -306,6 +306,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
 	LightBufferType* dataPtr2 = (LightBufferType*)mappedResource.pData;
 
 	//조명 변수를 상수 버퍼에 복사
+	dataPtr2->ambientColor = ambientColor;
 	dataPtr2->diffuseColor = diffuseColor;
 	dataPtr2->lightDirection = lightDirection;
 	dataPtr2->padding = 0.0f;
