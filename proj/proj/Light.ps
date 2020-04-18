@@ -6,7 +6,8 @@ cbuffer LightBuffer
 	float4 ambientColor;
 	float4 diffuseColor;
 	float3 lightDirection;
-	float padding;
+	float specularPower;
+	float4 specularColor;
 };
 
 struct PixelInputType
@@ -14,39 +15,47 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
+	float3 viewDirection : TEXCOORD1;
 };
 
 //Pixel Shader
 float4 LightPixelShader(PixelInputType input) : SV_TARGET
 {
-	float4 textureColor;
-	float3 lightDir;
-	float lightIntensity;
-	float4 color;
+	//텍스처 좌표 위치에서 샘플러를 사용하여 텍스처에서 픽셀 색상을 샘플링
+	float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
+	
+	//계산을 위해 빛 방향을 반전시킴
+	float3 lightDir = -lightDirection;
 
-	//텍스처 좌표 위치에서 샘플러를 사용하여 텍스처에서 픽셀 색상을 샘플링함
-	textureColor = shaderTexture.Sample(SampleType, input.tex);
+	//specual color를 초기화
+	float4 specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	//모든 픽셀의 기본 출력 생상을 주변 광원 값으로 설정
-	color = ambientColor;
-
-	//계산을 위해 빛 방향을 반전시킴
-	lightDir = -lightDirection;
+	float4 color = ambientColor;
 
 	//픽셀의 빛 양을 계산
-	lightIntensity = saturate(dot(input.normal, lightDir));
+	float lightIntensity= saturate(dot(input.normal, lightDir));
 
 	if(lightIntensity > 0.0f)
 	{
 		//확산 색과 광 강도의 양에 따라 최종 확산 색을 결정
 		color += (diffuseColor * lightIntensity);
-	}
 
-	//최종 빛의 색상을 채움
-	color = saturate(color);
+		//최종 빛의 색상을 채움
+		color = saturate(color);
+
+		//빛의 강도, 법선 벡터 및 빛의 방향에 따라 반사 벡터를 계산
+		float3 reflection = normalize(2*lightIntensity * input.normal - lightDir);
+
+		//반사 벡터, 시선 방향 및 반사 출력을 기준으로 반사 조명의 양을 결정
+		specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+	}
 
 	//텍스처 픽셀과 최종 확산 색을 곱하여 최종 픽셀 색상 결과를 얻음
 	color = color * textureColor;
+
+	//출력 색상의 마지막에 반사 컴포넌트를 추가
+	color = saturate(color + specular);
 
 	return color;
 }
