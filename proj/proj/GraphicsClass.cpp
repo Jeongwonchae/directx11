@@ -2,9 +2,8 @@
 #include "Stdafx.h"
 #include "D3DClass.h"
 #include "Cameraclass.h"
-#include "Modelclass.h"
-#include "LightClass.h"
-#include "LightShaderClass.h"
+#include "BitmapClass.h"
+#include "TextureShaderClass.h"
 #include "Graphicsclass.h"
 
 GraphicsClass::GraphicsClass()
@@ -46,78 +45,56 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 카메라 포지션 설정
 	m_Camera->SetPosition(0.0f, 0.0f, -6.0f);
 
-	// m_Model 객체 생성
-	m_Model = new ModelClass;
-	if (!m_Model)
+	// m_Bitmap 객체 생성
+	m_Bitmap = new BitmapClass;
+	if (!m_Bitmap)
 	{
 		return false;
 	}
 
-	// m_Model 객체 초기화
+	// m_Bitmap 객체 초기화
 	WCHAR* ddsFilename = new WCHAR[sizeof("../proj/data/seafloor.dds")];
-	char* modelFilename = new char[sizeof("../proj/data/cube.txt")];
 	wcscpy(ddsFilename, L"../proj/data/seafloor.dds");
-	strcpy(modelFilename, "../proj/data/cube.txt");
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), modelFilename, ddsFilename))
+	// m_Bitmap 객체 초기화
+	if (!m_Bitmap->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, ddsFilename, 256, 256))
 	{
-		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
 		return false;
 	}
 
-	// m_LightShader 객체 생성
-	m_LightShader = new LightShaderClass;
-	if (!m_LightShader)
+	// m_TextureShader 객체 생성
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader)
 	{
 		return false;
 	}
 
 	// m_LightShader 객체 초기화
-	if (!m_LightShader->Initialize(m_Direct3D->GetDevice(), hwnd))
+	if (!m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd))
 	{
 		MessageBox(hwnd, L"Could not initialize the Texture shader object.", L"Error", MB_OK);
 		return false;
 	}
-
-	// m_Light 객체 생성
-	m_Light = new LightClass;
-	if (!m_Light)
-	{
-		return false;
-	}
-
-	//m_Light 객체 초기화
-	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
-	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(1.0f, 0.0f, 1.0f);
-	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetSpecularPower(32.0f);
 
 	return true;
 }
 
 void GraphicsClass::Shutdown()
 {
-	// m_Light 객체 반환
-	if (m_Light)
+	// m_TextureShader 객체 반환
+	if (m_TextureShader)
 	{
-		delete m_Light;
-		m_Light = 0;
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
 	}
 
-	// m_LightShader 객체 반환
-	if (m_LightShader)
+	// m_Bitmap 객체 반환
+	if (m_Bitmap)
 	{
-		m_LightShader->Shutdown();
-		delete m_LightShader;
-		m_LightShader = 0;
-	}
-
-	// m_Model 객체 반환
-	if (m_Model)
-	{
-		m_Model->Shutdown();
-		delete m_Model;
-		m_Model = 0;
+		m_Bitmap->Shutdown();
+		delete m_Bitmap;
+		m_Bitmap = 0;
 	}
 
 	// m_Camera 객체 반환
@@ -159,24 +136,26 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->Render();
 
 	// 카메라 및 d3d 객체에서 월드, 뷰 및 투영 행렬을 가져옴
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	//삼각형이 회전 할 수 있도록 회전 값으로 월드 행렬을 회전
-	worldMatrix = XMMatrixRotationY(rotation);
+	//모든 2D 렌더링을 시작하려면 Z버퍼를 끔
+	m_Direct3D->TurnZBufferOff();
 
 	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비
-	m_Model->Render(m_Direct3D->GetDeviceContext());
+	m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 100, 100);
 
 	// 색상 쉐이더를 사용하여 모델을 렌더링
-	if (!m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(),
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(),m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
+	if (!m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture()))
 	{
 		return false;
 	}
+
+	//모든 2D 렌더링이 완료되었으므로 Z 버퍼를 다시 킴
+	m_Direct3D->TurnZBufferOn();
 
 	// 버퍼의 내용을 화면에 출력합니다
 	m_Direct3D->EndScene();
