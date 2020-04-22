@@ -82,6 +82,7 @@ void SystemClass::Run()
 				break;
 		}
 	}
+
 }
 
 LRESULT SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
@@ -111,7 +112,8 @@ bool SystemClass::Frame()
 	{
 		return false;
 	}
-	return m_Graphics->Frame();
+	m_Graphics->Frame();
+	return m_Graphics->Render();
 }
 
 void SystemClass::InitializeWindows(int &screenWidth, int &screenHeight)
@@ -152,6 +154,7 @@ void SystemClass::InitializeWindows(int &screenWidth, int &screenHeight)
 		dmScreenSettings.dmPelsWidth = (unsigned long)screenWidth;
 		dmScreenSettings.dmPelsHeight = (unsigned long)screenHeight;
 		dmScreenSettings.dmBitsPerPel = 32;
+		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
 		ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN);
 

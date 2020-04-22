@@ -7,8 +7,7 @@ const float SCREEN_NEAR = 0.1f;
 
 class D3DClass;
 class CameraClass;
-class BitmapClass;
-class TextureShaderClass;
+class TextClass;
 
 class GraphicsClass
 {
@@ -19,14 +18,12 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
-private:
-	bool Render(float);
+	void Frame();
+	bool Render();
 
 private:
 	D3DClass* m_Direct3D = nullptr;
 	CameraClass* m_Camera = nullptr;
-	BitmapClass* m_Bitmap = nullptr;
-	TextureShaderClass* m_TextureShader = nullptr;
+	TextClass* m_Text = nullptr;
 };
 

@@ -1,16 +1,16 @@
-#define _CRT_SECURE_NO_WARNINGS
-#include "Stdafx.h"
-#include "D3DClass.h"
-#include "Cameraclass.h"
-#include "BitmapClass.h"
-#include "TextureShaderClass.h"
-#include "Graphicsclass.h"
+#include "stdafx.h"
+#include "d3dclass.h"
+#include "cameraclass.h"
+#include "textclass.h"
+#include "graphicsclass.h"
+
 
 GraphicsClass::GraphicsClass()
 {
 }
 
-GraphicsClass::GraphicsClass(const GraphicsClass &)
+
+GraphicsClass::GraphicsClass(const GraphicsClass& other)
 {
 }
 
@@ -18,6 +18,7 @@ GraphicsClass::GraphicsClass(const GraphicsClass &)
 GraphicsClass::~GraphicsClass()
 {
 }
+
 
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
@@ -43,58 +44,37 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// 카메라 포지션 설정
-	m_Camera->SetPosition(0.0f, 0.0f, -6.0f);
+	XMMATRIX baseViewMatrix;
+	m_Camera->SetPosition(0.0f, 0.0f, -1.0f);
+	m_Camera->Render();
+	m_Camera->GetViewMatrix(baseViewMatrix);
 
-	// m_Bitmap 객체 생성
-	m_Bitmap = new BitmapClass;
-	if (!m_Bitmap)
+	// m_Text 객체 생성
+	m_Text = new TextClass;
+	if (!m_Text)
 	{
 		return false;
 	}
 
-	// m_Bitmap 객체 초기화
-	WCHAR* ddsFilename = new WCHAR[sizeof("../proj/data/seafloor.dds")];
-	wcscpy(ddsFilename, L"../proj/data/seafloor.dds");
-	// m_Bitmap 객체 초기화
-	if (!m_Bitmap->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, ddsFilename, 256, 256))
+	// m_Text 객체 초기화
+	if (!m_Text->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, baseViewMatrix))
 	{
-		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
-		return false;
-	}
-
-	// m_TextureShader 객체 생성
-	m_TextureShader = new TextureShaderClass;
-	if (!m_TextureShader)
-	{
-		return false;
-	}
-
-	// m_LightShader 객체 초기화
-	if (!m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd))
-	{
-		MessageBox(hwnd, L"Could not initialize the Texture shader object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
 		return false;
 	}
 
 	return true;
 }
 
+
 void GraphicsClass::Shutdown()
 {
-	// m_TextureShader 객체 반환
-	if (m_TextureShader)
+	// m_Text 객체 반환
+	if (m_Text)
 	{
-		m_TextureShader->Shutdown();
-		delete m_TextureShader;
-		m_TextureShader = 0;
-	}
-
-	// m_Bitmap 객체 반환
-	if (m_Bitmap)
-	{
-		m_Bitmap->Shutdown();
-		delete m_Bitmap;
-		m_Bitmap = 0;
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = 0;
 	}
 
 	// m_Camera 객체 반환
@@ -113,48 +93,46 @@ void GraphicsClass::Shutdown()
 	}
 }
 
-bool GraphicsClass::Frame()
+
+void GraphicsClass::Frame()
 {
-	static float rotation = 0.0f;
-
-	//각 프레임의 rotation 변수를 업데이트
-	rotation += (float)XM_PI * 0.004f;
-	if (rotation > 360.0f)
-	{
-		rotation -= 360.0f;
-	}
-
-	return Render(rotation);
+	// Set the position of the camera.
+	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
 }
 
-bool GraphicsClass::Render(float rotation)
+
+bool GraphicsClass::Render()
 {
-	// 씬을 그리기 위해 버퍼를 지움
+	// 씬을 그리기 위해 버퍼를 지웁니다
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-	// 카메라의 위치에 따라 뷰 행렬을 생성
+	// 카메라의 위치에 따라 뷰 행렬을 생성합니다
 	m_Camera->Render();
 
-	// 카메라 및 d3d 객체에서 월드, 뷰 및 투영 행렬을 가져옴
+	// 카메라 및 d3d 객체에서 월드, 뷰 및 투영 행렬을 가져옵니다
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
-	m_Direct3D->GetWorldMatrix(worldMatrix);
+
 	m_Camera->GetViewMatrix(viewMatrix);
+	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	//모든 2D 렌더링을 시작하려면 Z버퍼를 끔
+	// 모든 2D 렌더링을 시작하려면 Z 버퍼를 끕니다.
 	m_Direct3D->TurnZBufferOff();
 
-	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비
-	m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 100, 100);
+	// Turn on the alpha blending before rendering the text.
+	m_Direct3D->TurnOnAlphaBlending();
 
-	// 색상 쉐이더를 사용하여 모델을 렌더링
-	if (!m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture()))
+	// Render the text strings.
+	if (!m_Text->Render(m_Direct3D->GetDeviceContext(), worldMatrix, orthoMatrix))
 	{
 		return false;
 	}
 
-	//모든 2D 렌더링이 완료되었으므로 Z 버퍼를 다시 킴
+	// Turn off alpha blending after rendering the text.
+	m_Direct3D->TurnOffAlphaBlending();
+
+	// 모든 2D 렌더링이 완료되었으므로 Z 버퍼를 다시 켜십시오.
 	m_Direct3D->TurnZBufferOn();
 
 	// 버퍼의 내용을 화면에 출력합니다
