@@ -1,4 +1,4 @@
-#include "Stdafx.h"
+ï»¿#include "Stdafx.h"
 #include "CameraClass.h"
 
 
@@ -48,45 +48,45 @@ void CameraClass::Render()
 	float yaw, pitch, roll;
 	XMMATRIX rotationMatrix;
 
-	//À§ÂÊÀ» °¡¸®Å°´Â ¹éÅÍ ¼³Á¤
+	//ìœ„ìª½ì„ ê°€ë¦¬í‚¤ëŠ” ë°±í„° ì„¤ì •
 	up.x = 0.0f;
 	up.y = 1.0f;
 	up.z = 0.0f;
 
-	//XMVECTOR ±¸Á¶Ã¼¿¡ ¾÷·Îµå
+	//XMVECTOR êµ¬ì¡°ì²´ì— ì—…ë¡œë“œ
 	upVector = XMLoadFloat3(&up);
 
-	//3D¿ùµå¿¡¼­ Ä«¸Þ¶óÀÇ À§Ä¡¸¦ ¼³Á¤
+	//3Dì›”ë“œì—ì„œ ì¹´ë©”ë¼ì˜ ìœ„ì¹˜ë¥¼ ì„¤ì •
 	position = m_position;
 
-	//XMVECTOR ±¸Á¶Ã¼¿¡ ·Îµå
+	//XMVECTOR êµ¬ì¡°ì²´ì— ë¡œë“œ
 	positionVector = XMLoadFloat3(&position);
 
-	//±âº»ÀûÀ¸·Î Ä«¸Þ¶ó°¡ Ã£°íÀÖ´Â À§Ä¡¸¦ ¼³Á¤
+	//ê¸°ë³¸ì ìœ¼ë¡œ ì¹´ë©”ë¼ê°€ ì°¾ê³ ìžˆëŠ” ìœ„ì¹˜ë¥¼ ì„¤ì •
 	lookAt.x = 0.0f;
 	lookAt.y = 0.0f;
 	lookAt.z = 1.0f;
 
-	//XMVECTOR ±¸Á¶Ã¼¿¡ ·Îµå
+	//XMVECTOR êµ¬ì¡°ì²´ì— ë¡œë“œ
 	lookAtVector = XMLoadFloat3(&lookAt);
 
 	float toRadian = 0.174532925f;
-	// yaw(yÃà), pitch(xÃà) ¹× roll(zÃà)ÀÇ È¸Àü°ªÀ» ¶óµð¾È ´ÜÀ§·Î ¼³Á¤
+	// yaw(yì¶•), pitch(xì¶•) ë° roll(zì¶•)ì˜ íšŒì „ê°’ì„ ë¼ë””ì•ˆ ë‹¨ìœ„ë¡œ ì„¤ì •
 	pitch = m_rotation.x * toRadian;
 	yaw = m_rotation.y * toRadian;
 	roll = m_rotation.z * toRadian;
 
-	//yaw, pitch, roll °ªÀ» ÅëÇØ È¸Àü Çà·ÄÀ» ¸¸µë
+	//yaw, pitch, roll ê°’ì„ í†µí•´ íšŒì „ í–‰ë ¬ì„ ë§Œë“¬
 	rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 
-	//lookAt ¹× up º¤ÅÍ¸¦ È¸Àü Çà·Ä·Î º¯ÇüÇÏ¿© ºä°¡ ¿øÁ¡¿¡¼­ ¿Ã¹Ù¸£°Ô È¸ÀüµÇµµ·Ï ÇÔ
+	//lookAt ë° up ë²¡í„°ë¥¼ íšŒì „ í–‰ë ¬ë¡œ ë³€í˜•í•˜ì—¬ ë·°ê°€ ì›ì ì—ì„œ ì˜¬ë°”ë¥´ê²Œ íšŒì „ë˜ë„ë¡ í•¨
 	lookAtVector = XMVector3TransformCoord(lookAtVector, rotationMatrix);
 	upVector = XMVector3TransformCoord(upVector, rotationMatrix);
 
-	//È¸Àü µÈ Ä«¸Þ¶ó À§Ä¡¸¦ ºä¾î À§Ä¡·Î º¯È¯
+	//íšŒì „ ëœ ì¹´ë©”ë¼ ìœ„ì¹˜ë¥¼ ë·°ì–´ ìœ„ì¹˜ë¡œ ë³€í™˜
 	lookAtVector = XMVectorAdd(positionVector, lookAtVector);
 
-	//¸¶Áö¸·À¸·Î ¼¼ °³ÀÇ ¾÷µ¥ÀÌÆ® µÈ º¤ÅÍ¿¡¼­ ºä Çà·ÄÀ» ¸¸µë
+	//ë§ˆì§€ë§‰ìœ¼ë¡œ ì„¸ ê°œì˜ ì—…ë°ì´íŠ¸ ëœ ë²¡í„°ì—ì„œ ë·° í–‰ë ¬ì„ ë§Œë“¬
 	m_viewMatrix = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
 }
 

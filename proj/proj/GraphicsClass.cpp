@@ -102,6 +102,8 @@ bool GraphicsClass::Frame(int mouseX, int mouseY)
 	}
 	// Set the position of the camera.
 	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
+
+	return true;
 }
 
 
