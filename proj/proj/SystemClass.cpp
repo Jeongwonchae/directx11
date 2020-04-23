@@ -19,11 +19,11 @@ SystemClass::~SystemClass()
 bool SystemClass::Initialize()
 {
 	//윈도우 창 가로, 세로 넓이 변수 초기화
-	int screenWindth = 0;
+	int screenWidth = 0;
 	int screenHeight = 0;
 
 	//윈도우 생성 초기화
-	InitializeWindows(screenWindth, screenHeight);
+	InitializeWindows(screenWidth, screenHeight);
 
 	// m_Input 객체 생성 사용자 키보드 입력 처리
 	m_Input = new InputClass;
@@ -32,7 +32,11 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
-	m_Input->Initialize();
+	if (!m_Input->Initialize(m_hinstance, m_hwnd, screenWidth, screenHeight))
+	{
+		MessageBox(m_hwnd, L"Could not initialize the input object", L"Error", MB_OK);
+		return false;
+	}
 
 	m_Graphics = new GraphicsClass;
 	if (!m_Graphics)
@@ -40,7 +44,7 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
-	return m_Graphics->Initialize(screenWindth, screenHeight, m_hwnd);
+	return m_Graphics->Initialize(screenWidth, screenHeight, m_hwnd);
 }
 
 void SystemClass::Shutdown()
@@ -79,7 +83,15 @@ void SystemClass::Run()
 		else
 		{
 			if (!Frame())
+			{
+				MessageBox(m_hwnd, L"Frame Processing Failed", L"Error", MB_OK);
 				break;
+			}
+		}
+		//사용자가 ESC키를 눌렀는지 확인 후 종료 처리함
+		if (m_Input->IsEscapePressed() == true)
+		{
+			break;
 		}
 	}
 
@@ -87,32 +99,26 @@ void SystemClass::Run()
 
 LRESULT SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
-	switch (umsg)
-	{
-	case WM_KEYDOWN:
-	{
-		m_Input->KeyDown((unsigned int)wparam);
-		return 0;
-	}
-	case WM_KEYUP:
-	{
-		m_Input->KeyUp((unsigned int)wparam);
-		return 0;
-	}
-	default:
-	{
-		return DefWindowProc(hwnd, umsg, wparam, lparam);
-	}
-	}
+	return DefWindowProc(hwnd, umsg, wparam, lparam);
 }
 
 bool SystemClass::Frame()
 {
-	if (m_Input->IsKeyDown(VK_ESCAPE))
+	int mouseX = 0, mouseY = 0;
+
+	//입력 프레임 처리를 수행
+	if (!m_Input->Frame())
 	{
 		return false;
 	}
-	m_Graphics->Frame();
+
+	//입력 객체에서 마우스 위치를 가져옴
+	m_Input->GetMouseLocation(mouseX, mouseY);
+
+	if (!m_Graphics->Frame(mouseX, mouseY))
+	{
+		return false;
+	}
 	return m_Graphics->Render();
 }
 
