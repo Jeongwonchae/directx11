@@ -2,6 +2,9 @@
 #include "InputClass.h"
 #include "GraphicsClass.h"
 #include "SoundClass.h"
+#include "FpsClass.h"
+#include "CpuClass.h"
+#include "TimerClass.h"
 #include "SystemClass.h"
 
 SystemClass::SystemClass()
@@ -62,11 +65,57 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
+	m_Fps = new FpsClass;
+	if (!m_Fps)
+	{
+		return false;
+	}
+
+	m_Fps->Initialize();
+
+	m_Cpu = new CpuClass;
+	if (!m_Cpu)
+	{
+		return false;
+	}
+
+	m_Cpu->Initialize();
+
+	m_Timer = new TimerClass;
+	if (!m_Timer)
+	{
+		return false;
+	}
+
+	if (!m_Timer->Initialize())
+	{
+		return false;
+	}
+
 	return true;
 }
 
 void SystemClass::Shutdown()
 {
+	if (m_Timer)
+	{
+		delete m_Timer;
+		m_Timer = 0;
+	}
+
+	if (m_Cpu)
+	{
+		m_Cpu->Shutdown();
+		delete m_Cpu;
+		m_Cpu = 0;
+	}
+
+	if (m_Fps)
+	{
+		delete m_Fps;
+		m_Fps = 0;
+	}
+
 	if (m_Sound)
 	{
 		m_Sound->Shutdown();
@@ -129,6 +178,10 @@ LRESULT SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 
 bool SystemClass::Frame()
 {
+	m_Timer->Frame();
+	m_Fps->Frame();
+	m_Cpu->Frame();
+
 	int mouseX = 0, mouseY = 0;
 
 	//입력 프레임 처리를 수행
@@ -140,10 +193,11 @@ bool SystemClass::Frame()
 	//입력 객체에서 마우스 위치를 가져옴
 	m_Input->GetMouseLocation(mouseX, mouseY);
 
-	if (!m_Graphics->Frame(mouseX, mouseY))
+	if (!m_Graphics->Frame(m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime()))
 	{
 		return false;
 	}
+
 	return m_Graphics->Render();
 }
 

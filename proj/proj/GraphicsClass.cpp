@@ -94,9 +94,19 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame(int mouseX, int mouseY)
+bool GraphicsClass::Frame(int fps, int cpu, float frameTime)
 {
-	if (!m_Text->SetMousePosition(mouseX, mouseY, m_Direct3D->GetDeviceContext()))
+	//if (!m_Text->SetMousePosition(mouseX, mouseY, m_Direct3D->GetDeviceContext()))
+	//{
+	//	return false;
+	//}
+
+	if (!m_Text->SetFps(fps, m_Direct3D->GetDeviceContext()))
+	{
+		return false;
+	}
+
+	if (!m_Text->SetCpu(cpu, m_Direct3D->GetDeviceContext()))
 	{
 		return false;
 	}

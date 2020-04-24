@@ -68,7 +68,7 @@ bool TextClass::Initialize(ID3D11Device *device, ID3D11DeviceContext * deviceCon
 	}
 
 	//새로운 string 정보와 문장 정점 버퍼를 update
-	result = UpdateSentence(m_sentence1, (char*)"Hello", 100, 100, 1.0f, 1.0f, 1.0f, deviceContext);
+	result = UpdateSentence(m_sentence1, (char*)"Fps : ", 20, 20, 1.0f, 1.0f, 1.0f, deviceContext);
 	if (!result)
 	{
 		return false;
@@ -82,7 +82,7 @@ bool TextClass::Initialize(ID3D11Device *device, ID3D11DeviceContext * deviceCon
 	}
 
 	//새로운 string 정보와 문장 정점 버퍼를 update
-	result = UpdateSentence(m_sentence2, (char*)"Goodbye", 100, 200, 1.0f, 1.0f, 0.0f, deviceContext);
+	result = UpdateSentence(m_sentence2, (char*)"Cpu :", 20, 40, 1.0f, 1.0f, 0.0f, deviceContext);
 	if (!result)
 	{
 		return false;
@@ -135,6 +135,66 @@ bool TextClass::Render(ID3D11DeviceContext *deviceContext, XMMATRIX worldMatrix,
 	}
 
 	return true;
+}
+
+bool TextClass::SetFps(int fps, ID3D11DeviceContext *deviceContext)
+{
+	//fps를 10000이하로 자름
+	if (fps > 9999)
+	{
+		fps = 9999;
+	}
+
+	//fps 정수를 문자열 형식으로 변환
+	char tempString[16] = { 0, };
+	_itoa_s(fps, tempString, 10);
+
+	//fps 문자열을 설정
+	char fpsString[16] = { 0, };
+	strcpy_s(fpsString, "Fps : ");
+	strcat_s(fpsString, tempString);
+
+	float red = 0;
+	float green = 0;
+	float blue = 0;
+
+	//fps가 60 이상이면 fps 색상을 녹색으로 설정
+	if (fps >= 60)
+	{
+		red = 0.0f;
+		green = 1.0f;
+		blue = 0.0f;
+	}
+
+	if (fps < 60)
+	{
+		red = 1.0f;
+		green = 1.0f;
+		blue = 0.0f;
+	}
+
+	if (fps < 30)
+	{
+		red = 1.0f;
+		green = 0.0f;
+		blue = 0.0f;
+	}
+
+	return UpdateSentence(m_sentence1, fpsString, 20, 20, red, green, blue, deviceContext);
+}
+
+bool TextClass::SetCpu(int cpu, ID3D11DeviceContext *deviceContext)
+{
+	char tempString[16] = { 0, };
+	_itoa_s(cpu, tempString, 10);
+
+	//fps 문자열을 설정
+	char cpuString[16] = { 0, };
+	strcpy_s(cpuString, "Cpu : ");
+	strcat_s(cpuString, tempString);
+	strcat_s(cpuString, "%");
+	
+	return UpdateSentence(m_sentence2, cpuString, 20, 40, 0.0f, 1.0f, 0.0f, deviceContext);
 }
 
 bool TextClass::SetMousePosition(int mouseX, int mouseY, ID3D11DeviceContext *deviceContext)
