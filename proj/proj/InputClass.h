@@ -13,11 +13,14 @@ public:
 	bool IsEscapePressed();
 	void GetMouseLocation(int&, int&);
 
+	bool IsLeftArrowPressed();
+	bool IsRightArrowPressed();
+
 private:
 	bool ReadKeyboard();
 	bool ReadMouse();
 	void ProcessInput();
-
+	
 private:
 	IDirectInput8* m_directInput = nullptr;
 	IDirectInputDevice8* m_keyboard = nullptr;

@@ -5,6 +5,7 @@
 #include "FpsClass.h"
 #include "CpuClass.h"
 #include "TimerClass.h"
+#include "PositionClass.h"
 #include "SystemClass.h"
 
 SystemClass::SystemClass()
@@ -92,11 +93,23 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
+	m_Position = new PositionClass;
+	if (!m_Position)
+	{
+		return false;
+	}
+
 	return true;
 }
 
 void SystemClass::Shutdown()
 {
+	if (m_Position)
+	{
+		delete m_Position;
+		m_Position = 0;
+	}
+
 	if (m_Timer)
 	{
 		delete m_Timer;
@@ -191,9 +204,23 @@ bool SystemClass::Frame()
 	}
 
 	//입력 객체에서 마우스 위치를 가져옴
-	m_Input->GetMouseLocation(mouseX, mouseY);
+	//m_Input->GetMouseLocation(mouseX, mouseY);
 
-	if (!m_Graphics->Frame(m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime()))
+	//업데이트 된 위치를 계산하기 위한 프레임 시간을 설정
+	m_Position->SetFrameTime(m_Timer->GetTime());
+
+	//왼쪽 또는 오른쪽 화살표 키를 눌렀는지 확인, 그렇지 않으면 카메라를 적절히 회전
+	bool keyDown = m_Input->IsLeftArrowPressed();
+	m_Position->TurnLeft(keyDown);
+
+	keyDown = m_Input->IsRightArrowPressed();
+	m_Position->TurnRight(keyDown);
+
+	//현재 뷰 포인트 회전을 가져옴
+	float rotationY = 0.0f;
+	m_Position->GetRotation(rotationY);
+
+	if (!m_Graphics->Frame(m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime(), rotationY))
 	{
 		return false;
 	}

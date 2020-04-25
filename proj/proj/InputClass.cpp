@@ -195,3 +195,21 @@ void InputClass::ProcessInput()
 	if (m_mouseX > m_screenWidth) { m_mouseX = m_screenWidth; }
 	if (m_mouseY > m_screenHeight) { m_mouseY = m_screenHeight; }
 }
+
+bool InputClass::IsLeftArrowPressed()
+{
+	if (m_keyboardState[DIK_LEFT] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool InputClass::IsRightArrowPressed()
+{
+	if (m_keyboardState[DIK_RIGHT] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
