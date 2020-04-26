@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "TextureClass.h"
+#include "TextureArrayClass.h"
 #include "modelclass.h"
 
 #include <fstream>
@@ -21,7 +21,7 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename, char* modelFilename)
+bool ModelClass::Initialize(ID3D11Device* device, char* modelFilename, WCHAR* textureFilename1, WCHAR* textureFilename2)
 {
 	// 모델 데이터를 로드합니다.
 	if(!LoadModel(modelFilename))
@@ -36,14 +36,14 @@ bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename, char* 
 	}
 
 	// 이 모델의 텍스처를 로드합니다.
-	return LoadTexture(device, textureFilename);
+	return LoadTexture(device, textureFilename1, textureFilename2);
 }
 
 
 void ModelClass::Shutdown()
 {
 	// 모델 텍스쳐를 반환합니다.
-	ReleaseTexture();
+	ReleaseTextures();
 
 	// 버텍스 및 인덱스 버퍼를 종료합니다.
 	ShutdownBuffers();
@@ -66,9 +66,9 @@ int ModelClass::GetIndexCount()
 }
 
 
-ID3D11ShaderResourceView* ModelClass::GetTexture()
+ID3D11ShaderResourceView** ModelClass::GetTextureArray()
 {
-	return m_Texture->GetTexture();
+	return m_TextureArray->GetTextureArray();
 }
 
 
@@ -93,7 +93,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	{
 		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
 		vertices[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
-		vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
+		//vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
 
 		indices[i] = i;
 	}
@@ -186,28 +186,33 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 }
 
 
-bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
+bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2)
 {
 	// 텍스처 오브젝트를 생성한다.
-	m_Texture = new TextureClass;
-	if (!m_Texture)
+	m_TextureArray = new TextureArrayClass;
+	if (!m_TextureArray)
 	{
 		return false;
 	}
 
 	// 텍스처 오브젝트를 초기화한다.
-	return m_Texture->Initialize(device, filename);
+	return m_TextureArray->Initialize(device, filename1, filename2);
+}
+
+bool ModelClass::LoadTexture(ID3D11Device *, WCHAR *)
+{
+	return false;
 }
 
 
-void ModelClass::ReleaseTexture()
+void ModelClass::ReleaseTextures()
 {
 	// 텍스처 오브젝트를 릴리즈한다.
-	if (m_Texture)
+	if (m_TextureArray)
 	{
-		m_Texture->Shutdown();
-		delete m_Texture;
-		m_Texture = 0;
+		m_TextureArray->Shutdown();
+		delete m_TextureArray;
+		m_TextureArray = 0;
 	}
 }
 

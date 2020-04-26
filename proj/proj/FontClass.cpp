@@ -1,5 +1,5 @@
 #include "Stdafx.h"
-#include "TextureClass.h"
+#include "TextureArrayClass.h"
 #include "FontClass.h"
 
 #include <fstream>
@@ -39,9 +39,9 @@ void FontClass::Shutdown()
 	ReleaseFontData();
 }
 
-ID3D11ShaderResourceView * FontClass::GetTexture()
+ID3D11ShaderResourceView* FontClass::GetTexture ()
 {
-	return m_Texture->GetTexture();
+	return m_TextureArray->GetTexture();
 }
 
 void FontClass::BuildVertexArray(void *vertices, char *sentence, float drawX, float drawY)
@@ -159,24 +159,24 @@ void FontClass::ReleaseFontData()
 
 bool FontClass::LoadTexture(ID3D11Device *device , WCHAR *filename)
 {
-	//m_Texture 생성
-	m_Texture = new TextureClass;
-	if (!m_Texture)
+	//m_TextureArray 생성
+	m_TextureArray = new TextureArrayClass;
+	if (!m_TextureArray)
 	{
 		return false;
 	}
 
 	//Texture객체 초기화
-	return m_Texture->Initialize(device, filename);
+	return m_TextureArray->Initialize(device, filename);
 }
 
 void FontClass::ReleaseTexture()
 {
 	//텍스처 객체 반환
-	if (m_Texture)
+	if (m_TextureArray)
 	{
-		m_Texture->Shutdown();
-		delete m_Texture;
-		m_Texture = 0;
+		m_TextureArray->Shutdown();
+		delete m_TextureArray;
+		m_TextureArray = 0;
 	}
 }

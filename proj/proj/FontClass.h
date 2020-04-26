@@ -1,6 +1,6 @@
 #pragma once
 
-class TextureClass;
+class TextureArrayClass;
 
 class FontClass
 {
@@ -36,6 +36,6 @@ private:
 
 private:
 	FontType* m_Font = nullptr;
-	TextureClass* m_Texture = nullptr;
+	TextureArrayClass* m_TextureArray = nullptr;
 };
 
