@@ -1,37 +1,37 @@
 #include "stdafx.h"
-#include "MultitextureShaderClass.h"
+#include "LightMapShaderClass.h"
 
 #include <fsrmtlb.h>
 using namespace std;
 
-MultitextureShaderClass::MultitextureShaderClass()
+LightMapShaderClass::LightMapShaderClass()
 {
 }
 
 
-MultitextureShaderClass::MultitextureShaderClass(const MultitextureShaderClass&)
+LightMapShaderClass::LightMapShaderClass(const LightMapShaderClass&)
 {
 }
 
 
-MultitextureShaderClass::~MultitextureShaderClass()
+LightMapShaderClass::~LightMapShaderClass()
 {
 }
 
 
-bool MultitextureShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
+bool LightMapShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 {
-	return InitializeShader(device, hwnd, (WCHAR*)L"../proj/Multitexture.vs", (WCHAR*)L"../proj/Multitexture.ps");
+	return InitializeShader(device, hwnd, (WCHAR*)L"../proj/Lightmap.vs", (WCHAR*)L"../proj/Lightmap.ps");
 }
 
 
-void MultitextureShaderClass::Shutdown()
+void LightMapShaderClass::Shutdown()
 {
 	ShutdownShader();
 }
 
 
-bool MultitextureShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+bool LightMapShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray)
 {
 	//if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, lightDirection, diffuseColor))
@@ -46,13 +46,13 @@ bool MultitextureShaderClass::Render(ID3D11DeviceContext* deviceContext, int ind
 }
 
 
-bool MultitextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool LightMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
 {
 	HRESULT result;
 	ID3D10Blob* errorMessage = nullptr;
 
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "MultiTextureVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(vsFilename, NULL, NULL, "LightMapVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)
@@ -68,7 +68,7 @@ bool MultitextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 	}
 
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "MultiTexturePixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(psFilename, NULL, NULL, "LightMapPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)
@@ -188,7 +188,7 @@ bool MultitextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 }
 
 
-void MultitextureShaderClass::ShutdownShader()
+void LightMapShaderClass::ShutdownShader()
 {
 	//if(m_lightBuffer)
 	//{
@@ -228,7 +228,7 @@ void MultitextureShaderClass::ShutdownShader()
 }
 
 
-void MultitextureShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+void LightMapShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
 	OutputDebugStringA(reinterpret_cast<const char*>(errorMessage->GetBufferPointer()));
 
@@ -238,7 +238,7 @@ void MultitextureShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage,
 	MessageBox(hwnd, L"Error compiling shader.", shaderFilename, MB_OK);
 }
 
-bool MultitextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+bool LightMapShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray)
 {
 	//deviceContext->PSSetShaderResources(0, 1, &texture);
@@ -285,7 +285,7 @@ bool MultitextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceCon
 }
 
 
-void MultitextureShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void LightMapShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
 	deviceContext->IASetInputLayout(m_layout);
 

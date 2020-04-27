@@ -1,6 +1,6 @@
 #pragma once
 
-class MultitextureShaderClass
+class LightMapShaderClass
 {
 private:
 	struct MatrixBufferType
@@ -17,9 +17,9 @@ private:
 	//	float padding;
 	//};
 public:
-	MultitextureShaderClass();
-	MultitextureShaderClass(const MultitextureShaderClass&);
-	~MultitextureShaderClass();
+	LightMapShaderClass();
+	LightMapShaderClass(const LightMapShaderClass&);
+	~LightMapShaderClass();
 
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
