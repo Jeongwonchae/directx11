@@ -2,7 +2,7 @@
 #include "D3dclass.h"
 #include "Cameraclass.h"
 #include "ModelClass.h"
-#include "LightMapShaderClass.h"
+#include "AlphaMapShaderClass.h"
 #include "Textclass.h"
 //#include "LightClass.h"
 //#include "ModelListClass.h"
@@ -70,21 +70,22 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 
 	m_Model = new ModelClass;
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/square.txt", (WCHAR*)L"../proj/data/stone01.dds", (WCHAR*)L"../proj/data/light01.dds"))
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/square.txt", (WCHAR*)L"../proj/data/stone01.dds",
+		(WCHAR*)L"../proj/data/dirt01.dds", (WCHAR*)L"../proj/data/alpha01.dds"))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
-	m_LightMapShader = new LightMapShaderClass;
-	if (!m_LightMapShader)
+	m_AlphaMapShader = new AlphaMapShaderClass;
+	if (!m_AlphaMapShader)
 	{
 		return false;
 	}
 
-	if (!m_LightMapShader->Initialize(m_Direct3D->GetDevice(), hwnd))
+	if (!m_AlphaMapShader->Initialize(m_Direct3D->GetDevice(), hwnd))
 	{
-		MessageBox(hwnd, L"Could not initialize the Lightmap shader object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the Alphatmap shader object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -139,11 +140,11 @@ void GraphicsClass::Shutdown()
 	//	m_Light = 0;
 	//}
 
-	if (m_LightMapShader)
+	if (m_AlphaMapShader)
 	{
-		m_LightMapShader->Shutdown();
-		delete m_LightMapShader;
-		m_LightMapShader = 0;
+		m_AlphaMapShader->Shutdown();
+		delete m_AlphaMapShader;
+		m_AlphaMapShader = 0;
 	}
 
 	if (m_Model)
@@ -222,7 +223,7 @@ bool GraphicsClass::Render()
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	m_LightMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray());
+	m_AlphaMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray());
 
 	//절두체를 만듬
 	//m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
@@ -249,7 +250,7 @@ bool GraphicsClass::Render()
 			//m_Model->Render(m_Direct3D->GetDeviceContext());
 
 			//라이트 셰이더를 사용하여 모델을 렌더링함
-			//m_LightMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
+			//m_AlphaMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
 
 			//원래의 월드 매트릭스로 리셋
 			//m_Direct3D->GetWorldMatrix(worldMatrix);

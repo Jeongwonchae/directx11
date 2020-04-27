@@ -8,7 +8,7 @@ public:
 	~TextureArrayClass();
 
 	bool Initialize(ID3D11Device*, WCHAR*);
-	bool Initialize(ID3D11Device*, WCHAR*, WCHAR*);
+	bool Initialize(ID3D11Device*, WCHAR*, WCHAR*, WCHAR*);
 	void Shutdown();
 
 	ID3D11ShaderResourceView** GetTextureArray();
@@ -16,5 +16,5 @@ public:
 
 
 private:
-	ID3D11ShaderResourceView* m_TextureArrays[2] = { nullptr ,nullptr};
+	ID3D11ShaderResourceView* m_TextureArrays[3] = { nullptr ,nullptr, nullptr};
 };

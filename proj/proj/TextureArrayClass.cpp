@@ -25,7 +25,7 @@ bool TextureArrayClass::Initialize(ID3D11Device *device, WCHAR *filename)
 	return true;
 }
 
-bool TextureArrayClass::Initialize(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2)
+bool TextureArrayClass::Initialize(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2, WCHAR* filename3)
 {
 	// 텍스처를 파일로부터 읽어온다
 	if (FAILED(CreateDDSTextureFromFile(device, filename1, nullptr, &m_TextureArrays[0])))
@@ -33,6 +33,11 @@ bool TextureArrayClass::Initialize(ID3D11Device* device, WCHAR* filename1, WCHAR
 		return false;
 	}
 	if (FAILED(CreateDDSTextureFromFile(device, filename2, nullptr, &m_TextureArrays[1])))
+	{
+		return false;
+	}
+
+	if (FAILED(CreateDDSTextureFromFile(device, filename3, nullptr, &m_TextureArrays[2])))
 	{
 		return false;
 	}
@@ -55,6 +60,11 @@ void TextureArrayClass::Shutdown()
 	{
 		m_TextureArrays[1]->Release();
 		m_TextureArrays[1] = 0;
+	}
+	if (m_TextureArrays[2])
+	{					
+		m_TextureArrays[2]->Release();
+		m_TextureArrays[2] = 0;
 	}
 }
 

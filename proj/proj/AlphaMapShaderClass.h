@@ -1,6 +1,6 @@
 #pragma once
 
-class LightMapShaderClass
+class AlphaMapShaderClass
 {
 private:
 	struct MatrixBufferType
@@ -17,9 +17,9 @@ private:
 	//	float padding;
 	//};
 public:
-	LightMapShaderClass();
-	LightMapShaderClass(const LightMapShaderClass&);
-	~LightMapShaderClass();
+	AlphaMapShaderClass();
+	AlphaMapShaderClass(const AlphaMapShaderClass&);
+	~AlphaMapShaderClass();
 
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
