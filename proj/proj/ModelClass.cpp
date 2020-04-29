@@ -21,7 +21,7 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, char* modelfilename, WCHAR* texturefilename1, WCHAR* texturefilename2 ,WCHAR* texturefilename3)
+bool ModelClass::Initialize(ID3D11Device* device, char* modelfilename, WCHAR* texturefilename1, WCHAR* texturefilename2)
 {
 	// 모델 데이터를 로드합니다.
 	if(!LoadModel(modelfilename))
@@ -36,7 +36,7 @@ bool ModelClass::Initialize(ID3D11Device* device, char* modelfilename, WCHAR* te
 	}
 
 	// 이 모델의 텍스처를 로드합니다.
-	return LoadTexture(device, texturefilename1, texturefilename2, texturefilename3);
+	return LoadTexture(device, texturefilename1, texturefilename2);
 }
 
 
@@ -93,7 +93,9 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	{
 		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
 		vertices[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
-		//vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
+		vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
+		vertices[i].tangent = XMFLOAT3(m_model[i].tx, m_model[i].ty, m_model[i].tz);
+		vertices[i].binormal = XMFLOAT3(m_model[i].bx, m_model[i].by, m_model[i].bz);
 
 		indices[i] = i;
 	}
@@ -186,7 +188,7 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 }
 
 
-bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2, WCHAR* filename3)
+bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2)
 {
 	// 텍스처 오브젝트를 생성한다.
 	m_TextureArray = new TextureArrayClass;
@@ -196,7 +198,7 @@ bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* file
 	}
 
 	// 텍스처 오브젝트를 초기화한다.
-	return m_TextureArray->Initialize(device, filename1, filename2, filename3);
+	return m_TextureArray->Initialize(device, filename1, filename2);
 }
 
 bool ModelClass::LoadTexture(ID3D11Device *, WCHAR *)
@@ -280,4 +282,152 @@ void ModelClass::ReleaseModel()
 		delete [] m_model;
 		m_model = 0;
 	}
+}
+
+void ModelClass::CalculateModelVectors()
+{
+	TempVertexType vertex1, vertex2, vertex3;
+	VectorType tangent, binormal, normal;
+
+	//모델의 면 수를 계산
+	int faceCount = m_vertexCount / 3;
+
+	//모델 데이터에 대한 인덱스를 초기화
+	int index = 0;
+
+	//모든면을 살펴보고 접선, 비공식 및 법선 벡터를 계산
+	for (int i = 0; i < faceCount; i++)
+	{
+		//모델에서 이면에 대한 세 개의 정점을 가져옴
+		vertex1.x = m_model[index].x;
+		vertex1.y = m_model[index].y;
+		vertex1.z = m_model[index].z;
+		vertex1.tu = m_model[index].tu;
+		vertex1.tv = m_model[index].tv;
+		vertex1.nx = m_model[index].nx;
+		vertex1.ny = m_model[index].ny;
+		vertex1.nz = m_model[index].nz;
+
+		index++;
+		vertex2.x = m_model[index].x;
+		vertex2.y = m_model[index].y;
+		vertex2.z = m_model[index].z;
+		vertex2.tu = m_model[index].tu;
+		vertex2.tv = m_model[index].tv;
+		vertex2.nx = m_model[index].nx;
+		vertex2.ny = m_model[index].ny;
+		vertex2.nz = m_model[index].nz;
+		index++;
+
+		vertex3.x = m_model[index].x;
+		vertex3.y = m_model[index].y;
+		vertex3.z = m_model[index].z;
+		vertex3.tu = m_model[index].tu;
+		vertex3.tv = m_model[index].tv;
+		vertex3.nx = m_model[index].nx;
+		vertex3.ny = m_model[index].ny;
+		vertex3.nz = m_model[index].nz;
+		index++;
+		
+		//표면의 탄젠트와 바이 노멀을 계산
+		CalculateTangentBinormal(vertex1, vertex2, vertex3, tangent, binormal);
+
+		//점선과 binormal을 사용하여 새 법선을 계산
+		CalculateNormal(tangent, binormal, normal);
+
+		//모델 구조에서 면의 법선, 접선 및 바이 노멀을 저장
+		m_model[index - 1].nx = normal.x;
+		m_model[index - 1].ny = normal.y;
+		m_model[index - 1].nz = normal.z;
+		m_model[index - 1].tx = tangent.x;
+		m_model[index - 1].tz = tangent.z;
+		m_model[index - 1].ty = tangent.y;
+		m_model[index - 1].bx = binormal.x;
+		m_model[index - 1].by = binormal.y;
+		m_model[index - 1].bz = binormal.z;
+
+		m_model[index - 2].nx = normal.x;
+		m_model[index - 2].ny = normal.y;
+		m_model[index - 2].nz = normal.z;
+		m_model[index - 2].tx = tangent.x;
+		m_model[index - 2].tz = tangent.z;
+		m_model[index - 2].ty = tangent.y;
+		m_model[index - 2].bx = binormal.x;
+		m_model[index - 2].by = binormal.y;
+		m_model[index - 2].bz = binormal.z;
+
+		m_model[index - 3].nx = normal.x;
+		m_model[index - 3].ny = normal.y;
+		m_model[index - 3].nz = normal.z;
+		m_model[index - 3].tx = tangent.x;
+		m_model[index - 3].tz = tangent.z;
+		m_model[index - 3].ty = tangent.y;
+		m_model[index - 3].bx = binormal.x;
+		m_model[index - 3].by = binormal.y;
+		m_model[index - 3].bz = binormal.z;
+	}
+}
+
+void ModelClass::CalculateTangentBinormal(TempVertexType vertex1, TempVertexType vertex2, TempVertexType vertex3, VectorType &tangent, VectorType &binormal)
+{
+	float vector1[3], vector2[3];
+	float tuVector[2], tvVector[2];
+
+	//현재 표면의 두 백터를 계산
+	vector1[0] = vertex2.x - vertex1.x;
+	vector1[1] = vertex2.y - vertex1.y;
+	vector1[2] = vertex2.z - vertex1.z;
+
+	vector2[0] = vertex3.x - vertex1.x;
+	vector2[1] = vertex3.y - vertex1.y;
+	vector2[2] = vertex3.z - vertex1.z;
+
+	//tu 및 tv 텍스처 공간 벡터를 계산
+	tuVector[0] = vertex2.tu - vertex1.tu;
+	tvVector[0] = vertex2.tv - vertex1.tv;
+
+	tuVector[1] = vertex3.tu - vertex1.tu;
+	tvVector[1] = vertex3.tv - vertex1.tv;
+
+	//탄젠트 / 바이 노멀 방정식의 분모를 계산
+	float den = 1.0f / (tuVector[0] * tvVector[1] - tuVector[1] * tvVector[0]);
+
+	//교차 곱을 계산하고 계수로 곱하여 접선과 비 구식을 얻음
+	tangent.x = (tvVector[1] * vector1[0] - tvVector[0] * vector2[0]) * den;
+	tangent.y = (tvVector[1] * vector1[1] - tvVector[0] * vector2[1]) * den;
+	tangent.x = (tvVector[1] * vector1[2] - tvVector[0] * vector2[2]) * den;
+
+	binormal.x = (tuVector[0] * vector2[0] - tuVector[1] * vector1[0]) * den;
+	binormal.y = (tuVector[0] * vector2[1] - tuVector[1] * vector1[1]) * den;
+	binormal.x = (tuVector[0] * vector2[2] - tuVector[1] * vector1[2]) * den;
+
+	//이 법선의 길이를 계산
+	float lenght = sqrt((tangent.x * tangent.x) + (tangent.y * tangent.y) + (tangent.z * tangent.z));
+
+	//법선을 표준화 한 다음 저장
+	tangent.x = tangent.x / lenght;
+	tangent.y = tangent.y / lenght;
+	tangent.z = tangent.z / lenght;
+
+	lenght = sqrt((binormal.x * binormal.x) + (binormal.y * binormal.y) + (binormal.z * binormal.z));
+
+	binormal.x = binormal.x / lenght;
+	binormal.y = binormal.y / lenght;
+	binormal.z = binormal.z / lenght;
+}
+
+void ModelClass::CalculateNormal(VectorType tangent, VectorType binormal, VectorType &normal)
+{
+	//법선 벡터를 줄 수 있는 접선과 binormal의 외적을 계산
+	normal.x = (tangent.y * binormal.z) - (tangent.z * binormal.y);
+	normal.y = (tangent.z * binormal.x) - (tangent.x * binormal.z);
+	normal.z = (tangent.x * binormal.y) - (tangent.y * binormal.x);
+
+	//번선의 길이를 계산
+	float lenght = sqrt((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));
+
+	//법선을 표준화
+	normal.x = normal.x / lenght;
+	normal.y = normal.y / lenght;
+	normal.z = normal.z / lenght;
 }

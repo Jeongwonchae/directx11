@@ -2,9 +2,9 @@
 #include "D3dclass.h"
 #include "Cameraclass.h"
 #include "ModelClass.h"
-#include "AlphaMapShaderClass.h"
+#include "BumpMapShaderClass.h"
 #include "Textclass.h"
-//#include "LightClass.h"
+#include "LightClass.h"
 //#include "ModelListClass.h"
 //#include "FrustumClass.h"
 #include "graphicsclass.h"
@@ -70,32 +70,33 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 
 	m_Model = new ModelClass;
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/square.txt", (WCHAR*)L"../proj/data/stone01.dds",
-		(WCHAR*)L"../proj/data/dirt01.dds", (WCHAR*)L"../proj/data/alpha01.dds"))
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/cube.txt", (WCHAR*)L"../proj/data/stone01.dds",
+		(WCHAR*)L"../proj/data/bump01.dds"))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
-	m_AlphaMapShader = new AlphaMapShaderClass;
-	if (!m_AlphaMapShader)
+	m_BumpMapShader = new BumpMapShaderClass;
+	if (!m_BumpMapShader)
 	{
 		return false;
 	}
 
-	if (!m_AlphaMapShader->Initialize(m_Direct3D->GetDevice(), hwnd))
+	if (!m_BumpMapShader->Initialize(m_Direct3D->GetDevice(), hwnd))
 	{
-		MessageBox(hwnd, L"Could not initialize the Alphatmap shader object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the shader object.", L"Error", MB_OK);
 		return false;
 	}
 
-	//m_Light = new LightClass;
-	//if (!m_Light)
-	//{
-	//	return false;
-	//}
+	m_Light = new LightClass;
+	if (!m_Light)
+	{
+		return false;
+	}
 
-	//m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 
 	//m_ModelList = new ModelListClass;
 	//if (!m_ModelList)
@@ -134,17 +135,17 @@ void GraphicsClass::Shutdown()
 	//	m_ModelList = 0;
 	//}
 
-	//if (m_Light)
-	//{
-	//	delete m_Light;
-	//	m_Light = 0;
-	//}
-
-	if (m_AlphaMapShader)
+	if (m_Light)
 	{
-		m_AlphaMapShader->Shutdown();
-		delete m_AlphaMapShader;
-		m_AlphaMapShader = 0;
+		delete m_Light;
+		m_Light = 0;
+	}
+
+	if (m_BumpMapShader)
+	{
+		m_BumpMapShader->Shutdown();
+		delete m_BumpMapShader;
+		m_BumpMapShader = 0;
 	}
 
 	if (m_Model)
@@ -181,7 +182,7 @@ void GraphicsClass::Shutdown()
 
 bool GraphicsClass::Frame(int fps, int cpu, float frameTime, float rotationY)
 {
-	m_Camera->SetPosition(0.0f, 0.0f, -3.0f);
+	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
 
 	//m_Camera->SetRotation(0.0f, rotationY, 0.0f);
 
@@ -221,9 +222,20 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
+	//각 프레임의 rotation 변수를 업데이트
+	static float rotation = 0.0f;
+	rotation += (float)XM_PI * 0.0025f;
+	if (rotation > 360.0f)
+	{
+		rotation -= 360.0f;
+	}
+
+	worldMatrix = XMMatrixRotationY(rotation);
+
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	m_AlphaMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray());
+	m_BumpMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
+		m_Light->GetDirection(), m_Light->GetDiffuseColor());
 
 	//절두체를 만듬
 	//m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
@@ -250,7 +262,7 @@ bool GraphicsClass::Render()
 			//m_Model->Render(m_Direct3D->GetDeviceContext());
 
 			//라이트 셰이더를 사용하여 모델을 렌더링함
-			//m_AlphaMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
+			//m_BumpMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
 
 			//원래의 월드 매트릭스로 리셋
 			//m_Direct3D->GetWorldMatrix(worldMatrix);

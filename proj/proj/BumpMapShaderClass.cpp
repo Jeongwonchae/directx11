@@ -1,41 +1,37 @@
 #include "stdafx.h"
-#include "AlphaMapShaderClass.h"
+#include "BumpMapShaderClass.h"
 
-#include <fsrmtlb.h>
-using namespace std;
-
-AlphaMapShaderClass::AlphaMapShaderClass()
+BumpMapShaderClass::BumpMapShaderClass()
 {
 }
 
 
-AlphaMapShaderClass::AlphaMapShaderClass(const AlphaMapShaderClass&)
+BumpMapShaderClass::BumpMapShaderClass(const BumpMapShaderClass&)
 {
 }
 
 
-AlphaMapShaderClass::~AlphaMapShaderClass()
+BumpMapShaderClass::~BumpMapShaderClass()
 {
 }
 
 
-bool AlphaMapShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
+bool BumpMapShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 {
-	return InitializeShader(device, hwnd, (WCHAR*)L"../proj/Alphamap.vs", (WCHAR*)L"../proj/Alphamap.ps");
+	return InitializeShader(device, hwnd, (WCHAR*)L"../proj/Shader.vs", (WCHAR*)L"../proj/Shader.ps");
 }
 
 
-void AlphaMapShaderClass::Shutdown()
+void BumpMapShaderClass::Shutdown()
 {
 	ShutdownShader();
 }
 
 
-bool AlphaMapShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray)
+bool BumpMapShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
 {
-	//if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, lightDirection, diffuseColor))
-	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray))
+	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, lightDirection, diffuseColor))
 	{
 		return false;
 	}
@@ -46,13 +42,13 @@ bool AlphaMapShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCo
 }
 
 
-bool AlphaMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool BumpMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
 {
 	HRESULT result;
 	ID3D10Blob* errorMessage = nullptr;
 
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "AlphaMapVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(vsFilename, NULL, NULL, "BumpMapVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)
@@ -68,7 +64,7 @@ bool AlphaMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 	}
 
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "AlphaMapPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(psFilename, NULL, NULL, "BumpMapPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)
@@ -95,7 +91,7 @@ bool AlphaMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 		return false;
 	}
 
-	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
+	D3D11_INPUT_ELEMENT_DESC polygonLayout[5];
 	polygonLayout[0].SemanticName = "POSITION";
 	polygonLayout[0].SemanticIndex = 0;
 	polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -112,13 +108,29 @@ bool AlphaMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 	polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[1].InstanceDataStepRate = 0;
 
-	//polygonLayout[2].SemanticName = "NORMAL";
-	//polygonLayout[2].SemanticIndex = 0;
-	//polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	//polygonLayout[2].InputSlot = 0;
-	//polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-	//polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	//polygonLayout[2].InstanceDataStepRate = 0;
+	polygonLayout[2].SemanticName = "NORMAL";
+	polygonLayout[2].SemanticIndex = 0;
+	polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	polygonLayout[2].InputSlot = 0;
+	polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+	polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	polygonLayout[2].InstanceDataStepRate = 0;
+
+	polygonLayout[3].SemanticName = "TANGENT";
+	polygonLayout[3].SemanticIndex = 0;
+	polygonLayout[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	polygonLayout[3].InputSlot = 0;
+	polygonLayout[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+	polygonLayout[3].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	polygonLayout[3].InstanceDataStepRate = 0;
+
+	polygonLayout[4].SemanticName = "BINORMAL";
+	polygonLayout[4].SemanticIndex = 0;
+	polygonLayout[4].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	polygonLayout[4].InputSlot = 0;
+	polygonLayout[4].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+	polygonLayout[4].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	polygonLayout[4].InstanceDataStepRate = 0;
 
 	UINT numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
@@ -170,31 +182,31 @@ bool AlphaMapShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 		return false;
 	}
 
-	//D3D11_BUFFER_DESC lightBufferDesc;
-	//lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//lightBufferDesc.ByteWidth = sizeof(LightBufferType);
-	//lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//lightBufferDesc.MiscFlags = 0;
-	//lightBufferDesc.StructureByteStride = 0;
+	D3D11_BUFFER_DESC lightBufferDesc;
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
 
-	//result = device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
-	//if(FAILED(result))
-	//{
-	//	return false;
-	//}	
+	result = device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
+	if(FAILED(result))
+	{
+		return false;
+	}	
 
 	return true;
 }
 
 
-void AlphaMapShaderClass::ShutdownShader()
+void BumpMapShaderClass::ShutdownShader()
 {
-	//if(m_lightBuffer)
-	//{
-	//	m_lightBuffer->Release();
-	//	m_lightBuffer = 0;
-	//}
+	if(m_lightBuffer)
+	{
+		m_lightBuffer->Release();
+		m_lightBuffer = 0;
+	}
 
 	if (m_matrixBuffer)
 	{
@@ -228,7 +240,7 @@ void AlphaMapShaderClass::ShutdownShader()
 }
 
 
-void AlphaMapShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+void BumpMapShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
 	OutputDebugStringA(reinterpret_cast<const char*>(errorMessage->GetBufferPointer()));
 
@@ -238,8 +250,8 @@ void AlphaMapShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWN
 	MessageBox(hwnd, L"Error compiling shader.", shaderFilename, MB_OK);
 }
 
-bool AlphaMapShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray)
+bool BumpMapShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
 {
 	//deviceContext->PSSetShaderResources(0, 1, &texture);
 
@@ -264,28 +276,29 @@ bool AlphaMapShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext
 	unsigned int bufferNumber = 0;
 
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
-	deviceContext->PSSetShaderResources(0, 3, textureArray);
+	deviceContext->PSSetShaderResources(0, 2, textureArray);
 
-	//if(FAILED(deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
-	//{
-	//	return false;
-	//}
+	if(FAILED(deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	{
+		return false;
+	}
 
-	//LightBufferType* dataPtr2 = (LightBufferType*)mappedResource.pData;
+	LightBufferType* dataPtr2 = (LightBufferType*)mappedResource.pData;
 
-	//dataPtr2->diffuseColor = diffuseColor;
-	//dataPtr2->lightDirection = lightDirection;
+	dataPtr2->diffuseColor = diffuseColor;
+	dataPtr2->lightDirection = lightDirection;
 
-	//deviceContext->Unmap(m_lightBuffer, 0);
+	deviceContext->Unmap(m_lightBuffer, 0);
 
-	//bufferNumber = 0;
+	bufferNumber = 0;
 
-	//deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
+	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
+
 	return true;
 }
 
 
-void AlphaMapShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void BumpMapShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
 	deviceContext->IASetInputLayout(m_layout);
 

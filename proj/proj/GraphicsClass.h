@@ -8,9 +8,9 @@ const float SCREEN_NEAR = 0.1f;
 class D3DClass;
 class CameraClass;
 class ModelClass;
-class AlphaMapShaderClass;
+class BumpMapShaderClass;
 class TextClass;
-//class LightClass;
+class LightClass;
 //class ModelListClass;
 //class FrustumClass;
 
@@ -30,9 +30,9 @@ private:
 	D3DClass* m_Direct3D = nullptr;
 	CameraClass* m_Camera = nullptr;
 	ModelClass* m_Model = nullptr;
-	AlphaMapShaderClass* m_AlphaMapShader = nullptr;
+	BumpMapShaderClass* m_BumpMapShader = nullptr;
 	TextClass* m_Text = nullptr;
-	//LightClass* m_Light;
+	LightClass* m_Light;
 	//ModelListClass* m_ModelList = nullptr;
 	//FrustumClass* m_Frustum = nullptr;
 };
