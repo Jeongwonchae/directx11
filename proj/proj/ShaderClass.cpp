@@ -49,7 +49,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
 	ID3D10Blob* errorMessage = nullptr;
 
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "VertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(vsFilename, NULL, NULL, "MyVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)
@@ -65,7 +65,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
 	}
 
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "PixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(psFilename, NULL, NULL, "MyPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)

@@ -2,7 +2,7 @@
 #include "D3dclass.h"
 #include "Cameraclass.h"
 #include "ModelClass.h"
-#include "BumpMapShaderClass.h"
+#include "ShaderClass.h"
 #include "Textclass.h"
 #include "LightClass.h"
 //#include "ModelListClass.h"
@@ -70,20 +70,20 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 
 	m_Model = new ModelClass;
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/cube.txt", (WCHAR*)L"../proj/data/stone01.dds",
-		(WCHAR*)L"../proj/data/bump01.dds"))
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/cube.txt", (WCHAR*)L"../proj/data/stone02.dds",
+		(WCHAR*)L"../proj/data/bump02.dds", (WCHAR*)L"../proj/data/spec02.dds"))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
-	m_BumpMapShader = new BumpMapShaderClass;
-	if (!m_BumpMapShader)
+	m_Shader = new ShaderClass;
+	if (!m_Shader)
 	{
 		return false;
 	}
 
-	if (!m_BumpMapShader->Initialize(m_Direct3D->GetDevice(), hwnd))
+	if (!m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd))
 	{
 		MessageBox(hwnd, L"Could not initialize the shader object.", L"Error", MB_OK);
 		return false;
@@ -97,6 +97,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetSpecularPower(16.0f);
 
 	//m_ModelList = new ModelListClass;
 	//if (!m_ModelList)
@@ -141,11 +143,11 @@ void GraphicsClass::Shutdown()
 		m_Light = 0;
 	}
 
-	if (m_BumpMapShader)
+	if (m_Shader)
 	{
-		m_BumpMapShader->Shutdown();
-		delete m_BumpMapShader;
-		m_BumpMapShader = 0;
+		m_Shader->Shutdown();
+		delete m_Shader;
+		m_Shader = 0;
 	}
 
 	if (m_Model)
@@ -234,8 +236,9 @@ bool GraphicsClass::Render()
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	m_BumpMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
-		m_Light->GetDirection(), m_Light->GetDiffuseColor());
+	m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
+		m_Light->GetDirection(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 
 	//절두체를 만듬
 	//m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
@@ -262,7 +265,7 @@ bool GraphicsClass::Render()
 			//m_Model->Render(m_Direct3D->GetDeviceContext());
 
 			//라이트 셰이더를 사용하여 모델을 렌더링함
-			//m_BumpMapShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
+			//m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
 
 			//원래의 월드 매트릭스로 리셋
 			//m_Direct3D->GetWorldMatrix(worldMatrix);
