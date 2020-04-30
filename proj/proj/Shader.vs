@@ -5,6 +5,11 @@ cbuffer MatrixBuffer
 	matrix projectionMatrix;
 };
 
+cbuffer CameraBuffer
+{
+	float3 cameraPosition;
+};
+
 struct VertexInputType
 {
 	float4 position : POSITION;
@@ -21,14 +26,15 @@ struct PixelInputType
 	float3 normal : NORMAL;
 	float3 tangent : TANGENT;
 	float3 binormal : BINORMAL;
+	float3 viewDirection : TEXCOORD1;
 };
 
-PixelInputType BumpMapVertexShader(VertexInputType input)
+PixelInputType VertexShader(VertexInputType input)
 {
 	PixelInputType output;
+	float4 worldPosition;
 
 	input.position.w = 1.0f;
-    input.position.w = 1.0f;
 
 	output.position = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);
@@ -45,6 +51,12 @@ PixelInputType BumpMapVertexShader(VertexInputType input)
 	output.binormal = mul(input.binormal, (float3x3)worldMatrix);
 	output.binormal = normalize(output.binormal);
 	
+	worldPosition = mul(input.position, worldMatrix);
+
+	output.viewDirection = cameraPosition.xyz - worldPosition.xyz;
+
+	output.viewDirection = normalize(output.viewDirection);
+
 	return output;
 }
 
