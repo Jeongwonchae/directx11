@@ -29,7 +29,7 @@ struct PixelInputType
 	float3 viewDirection : TEXCOORD1;
 };
 
-PixelInputType VertexShader(VertexInputType input)
+PixelInputType MyVertexShader(VertexInputType input)
 {
 	PixelInputType output;
 	float4 worldPosition;
