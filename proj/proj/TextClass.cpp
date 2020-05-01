@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "Stdafx.h"
 #include "FontClass.h"
-#include "FontShaderClass.h"
+#include "TextureShaderClass.h"
 #include "TextClass.h"
 
 TextClass::TextClass()
@@ -47,13 +47,13 @@ bool TextClass::Initialize(ID3D11Device *device, ID3D11DeviceContext * deviceCon
 	}
 
 	//ÆùÆ® ¼ÎÀÌ´õ °´Ã¼ »ý¼º
-	m_FontShader = new FontShaderClass;
+	m_FontShader = new TextureShaderClass;
 	if (!m_FontShader)
 	{
 		return false;
 	}
 	//ÆùÆ® °´Ã¼ ÃÊ±âÈ­
-	result = m_FontShader->Initialize(device, hwnd);
+	result = m_FontShader->FontInitialize(device, hwnd);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the font Shader object", L"Error", MB_OK);
@@ -402,7 +402,7 @@ bool TextClass::RenderSentence(ID3D11DeviceContext *deviceContext, SentenceType 
 
 	pixelColor = XMFLOAT4(sentence->red, sentence->green, sentence->blue, 1.0f);
 
-	result = m_FontShader->Render(deviceContext, sentence->indexCount, wolrdMatrix, m_baseViewMatrix, orthoMatrix, m_Font->GetTexture(), pixelColor);
+	result = m_FontShader->FontRender(deviceContext, sentence->indexCount, wolrdMatrix, m_baseViewMatrix, orthoMatrix, m_Font->GetTexture(), pixelColor);
 	if (!result)
 	{
 		return false;

@@ -1,7 +1,7 @@
 #pragma once
 
 class FontClass;
-class FontShaderClass;
+class TextureShaderClass;
 
 class TextClass : public AlignedAllocationPolicy<16>
 {
@@ -40,7 +40,7 @@ private:
 
 private:
 	FontClass* m_Font = nullptr;
-	FontShaderClass* m_FontShader = nullptr;
+	TextureShaderClass* m_FontShader = nullptr;
 	int m_screenWidth = 0;
 	int m_screenHeight = 0;
 	XMMATRIX m_baseViewMatrix;

@@ -5,6 +5,9 @@
 #include "ShaderClass.h"
 #include "Textclass.h"
 #include "LightClass.h"
+#include "RenderTextureClass.h"
+#include "DebugWindowClass.h"
+#include "TextureShaderClass.h"
 //#include "ModelListClass.h"
 //#include "FrustumClass.h"
 #include "graphicsclass.h"
@@ -100,6 +103,40 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(16.0f);
 
+	m_RenderTexture = new RenderTextureClass;
+	if (!m_RenderTexture)
+	{
+		return false;
+	}
+
+	if (!m_RenderTexture->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight))
+	{
+		return false;
+	}
+
+	m_DebugWindow = new DebugWindowClass;
+	if (!m_DebugWindow)
+	{
+		return false;
+	}
+
+	if (!m_DebugWindow->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight,100, 100) )
+	{
+		MessageBox(hwnd, L"Could not initialize the debug window object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader)
+	{
+		return false;
+	}
+
+	if (!m_TextureShader->TextureInitialize(m_Direct3D->GetDevice(), hwnd))
+	{
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
+		return false;
+	}
 	//m_ModelList = new ModelListClass;
 	//if (!m_ModelList)
 	//{
@@ -136,6 +173,27 @@ void GraphicsClass::Shutdown()
 	//	delete m_ModelList;
 	//	m_ModelList = 0;
 	//}
+
+	if (m_TextureShader)
+	{
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
+	}
+
+	if (m_DebugWindow)
+	{
+		m_DebugWindow->Shutdown();
+		delete m_DebugWindow;
+		m_DebugWindow = 0;
+	}
+
+	if (m_RenderTexture)
+	{
+		m_RenderTexture->Shutdown();
+		delete m_RenderTexture;
+		m_RenderTexture = 0;
+	}
 
 	if (m_Light)
 	{
@@ -210,13 +268,25 @@ bool GraphicsClass::Render()
 	//float radius = 1.0f;
 	//XMFLOAT4 color;
 
+	//전체 장면을 텍스처로 렌더링
+	if (!RenderToTexture())
+	{
+		return false;
+	}
+
 	// 씬을 그리기 위해 버퍼를 지웁니다
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-	// 카메라의 위치에 따라 뷰 행렬을 생성합니다
-	m_Camera->Render();
+	if (!RenderScene())
+	{
+		return false;
+	}
 
-	// 카메라 및 d3d 객체에서 월드, 뷰 및 투영 행렬을 가져옵니다
+	m_Direct3D->TurnZBufferOff();
+
+	// Turn on the alpha blending before rendering the text.
+	m_Direct3D->TurnOnAlphaBlending();
+
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 
 	m_Camera->GetViewMatrix(viewMatrix);
@@ -224,67 +294,15 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	//각 프레임의 rotation 변수를 업데이트
-	static float rotation = 0.0f;
-	rotation += (float)XM_PI * 0.0025f;
-	if (rotation > 360.0f)
+	if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 50, 50))
 	{
-		rotation -= 360.0f;
+		return false;
 	}
 
-	worldMatrix = XMMatrixRotationY(rotation);
-
-	m_Model->Render(m_Direct3D->GetDeviceContext());
-
-	m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
-		m_Light->GetDirection(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
-
-	//절두체를 만듬
-	//m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
-
-	//렌더링 될 모델의 수를 얻음
-	//int modelCount = m_ModelList->GetModelCount();
-
-	//렌더링 된 모델의 개수를 초기화
-	//int renderCount = 0;
-
-	//모든 모델을 살펴보고 카메라 뷰에서 볼 수 있는 경우에만 렝더링 함
-	//for (int index = 0; index < modelCount; index++)
-	//{
-		//해당 인덱스에서 구형 모델의 위치와 색상을 가져옴
-		//m_ModelList->GetData(index, positionX, positionY, positionZ, color);
-
-		//구형 모델이 뷰 frustum에 있는지 확인
-		//if (m_Frustum->CheckSphere(positionX, positionY, positionZ, radius))
-		//{
-			//모델을 렝더링 할 위치로 이동
-			//worldMatrix = XMMatrixTranslation(positionX, positionY, positionZ);
-
-			//모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비)
-			//m_Model->Render(m_Direct3D->GetDeviceContext());
-
-			//라이트 셰이더를 사용하여 모델을 렌더링함
-			//m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(), m_Light->GetDirection(), color);
-
-			//원래의 월드 매트릭스로 리셋
-			//m_Direct3D->GetWorldMatrix(worldMatrix);
-
-			//renderCount++;
-		//}
-	//}
-
-	//이 프레임에서 실제로 렌더링 된 모델의 수를 설정
-	//if (!m_Text->SetRenderCount(renderCount, m_Direct3D->GetDeviceContext()))
-	//{
-	//	return false;
-	//}
-
-	// 모든 2D 렌더링을 시작하려면 Z 버퍼를 끕니다.
-	m_Direct3D->TurnZBufferOff();
-
-	// Turn on the alpha blending before rendering the text.
-	m_Direct3D->TurnOnAlphaBlending();
+	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_RenderTexture->GetShaderResourceView()))
+	{
+		return false;
+	}
 
 	// Render the text strings.
 	if (!m_Text->Render(m_Direct3D->GetDeviceContext(), worldMatrix, orthoMatrix))
@@ -302,4 +320,52 @@ bool GraphicsClass::Render()
 	m_Direct3D->EndScene();
 
 	return true;
+}
+
+bool GraphicsClass::RenderToTexture()
+{
+	m_RenderTexture->SetRenderTarget(m_Direct3D->GetDeviceContext(), m_Direct3D->GetDepthStencilView());
+
+	m_RenderTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), m_Direct3D->GetDepthStencilView(), 0.0f, 0.0f, 1.0f, 1.0f);
+
+	if (!RenderScene())
+	{
+		return false;
+	}
+
+	m_Direct3D->SetBackBufferRenderTarget();
+
+	return true;
+}
+
+bool GraphicsClass::RenderScene()
+{
+	// 카메라의 위치에 따라 뷰 행렬을 생성합니다
+	m_Camera->Render();
+
+	// 카메라 및 d3d 객체에서 월드, 뷰 및 투영 행렬을 가져옵니다
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
+
+	m_Camera->GetViewMatrix(viewMatrix);
+	m_Direct3D->GetWorldMatrix(worldMatrix);
+	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
+
+
+	//각 프레임의 rotation 변수를 업데이트
+	static float rotation = 0.0f;
+	rotation += (float)XM_PI * 0.0025f;
+	if (rotation > 360.0f)
+	{
+		rotation -= 360.0f;
+	}
+
+	worldMatrix = XMMatrixRotationY(rotation);
+
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+
+
+	return m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
+			m_Light->GetDirection(), m_Light->GetDiffuseColor(),
+			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 }
