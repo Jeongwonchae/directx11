@@ -53,10 +53,10 @@ bool TextureShaderClass::FontRender(ID3D11DeviceContext* deviceContext, int inde
 }
 
 bool TextureShaderClass::TextureRender(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float fogStart, float fogEnd)
 {
 	// 렌더링에 사용할 셰이더 매개 변수를 설정합니다.
-	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture))
+	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, fogStart, fogEnd))
 	{
 		return false;
 	}
@@ -203,7 +203,7 @@ bool TextureShaderClass::FontInitializeShader(ID3D11Device* device, HWND hwnd, W
 	// Setup the description of the dynamic pixel constant buffer that is in the pixel shader.
 	D3D11_BUFFER_DESC pixelBufferDesc;
 	pixelBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	pixelBufferDesc.ByteWidth = sizeof(PixelBufferType);
+	pixelBufferDesc.ByteWidth = sizeof(FontPixelBufferType);
 	pixelBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	pixelBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	pixelBufferDesc.MiscFlags = 0;
@@ -474,7 +474,7 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	}
 
 	// Get a pointer to the data in the pixel constant buffer.
-	PixelBufferType* dataPtr2 = (PixelBufferType*)mappedResource.pData;
+	FontPixelBufferType* dataPtr2 = (FontPixelBufferType*)mappedResource.pData;
 
 	// Copy the pixel color into the pixel constant buffer.
 	dataPtr2->pixelColor = pixelColor;
@@ -491,9 +491,8 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 }
 
 bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float fogStart, float fogEnd)
 {
-
 
 	// 상수 버퍼의 내용을 쓸 수 있도록 잠금
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -526,6 +525,22 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	// 픽셀 셰이더에서 셰이더 텍스처 리소스를 설정
 	deviceContext->PSSetShaderResources(0, 1, &texture);
+
+	if (FAILED(deviceContext->Map(m_pixelBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0 , &mappedResource)))
+	{
+		return false;
+	}
+
+	PixelBufferType* dataPtr2 = (PixelBufferType*)mappedResource.pData;
+
+	dataPtr2->fogStart = fogStart;
+	dataPtr2->fogEnd = fogEnd;
+
+	deviceContext->Unmap(m_pixelBuffer, 0);
+
+	bufferNumber = 1;
+
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_pixelBuffer);
 
 	return true;
 }

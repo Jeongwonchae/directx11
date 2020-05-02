@@ -120,7 +120,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	if (!m_DebugWindow->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight,100, 100) )
+	if (!m_DebugWindow->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight,300, 300) )
 	{
 		MessageBox(hwnd, L"Could not initialize the debug window object.", L"Error", MB_OK);
 		return false;
@@ -268,6 +268,11 @@ bool GraphicsClass::Render()
 	//float radius = 1.0f;
 	//XMFLOAT4 color;
 
+	float fogColor = 0.5f;
+
+	float fogStart = 0.0f;
+	float fogEnd = 5.0f;
+
 	//전체 장면을 텍스처로 렌더링
 	if (!RenderToTexture())
 	{
@@ -294,12 +299,12 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 50, 50))
+	if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 100, 100))
 	{
 		return false;
 	}
 
-	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_RenderTexture->GetShaderResourceView()))
+	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_RenderTexture->GetShaderResourceView(), fogStart, fogEnd))
 	{
 		return false;
 	}

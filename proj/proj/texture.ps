@@ -1,29 +1,24 @@
-////////////////////////////////////////////////////////////////////////////////
-// Filename: texture.ps
-////////////////////////////////////////////////////////////////////////////////
-
-
-/////////////
-// GLOBALS //
-/////////////
 Texture2D shaderTexture;
 SamplerState SampleType;
 
-
-//////////////
-// TYPEDEFS //
-//////////////
 struct PixelInputType
 {
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
+	float fogFactor : FOG;
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Pixel Shader
-////////////////////////////////////////////////////////////////////////////////
 float4 TexturePixelShader(PixelInputType input) : SV_TARGET
 {
-	return shaderTexture.Sample(SampleType, input.tex);
+	float4 textureColor;
+	float4 fogColor;
+	float4 finalColor;
+
+	textureColor = shaderTexture.Sample(SampleType, input.tex);
+
+	fogColor = float4(0.5f, 0.5f, 0.5f, 1.0f);
+
+	finalColor = input.fogFactor * textureColor + (1.0 - input.fogFactor) * fogColor;
+
+	return finalColor;
 }
