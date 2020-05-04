@@ -71,6 +71,11 @@ ID3D11ShaderResourceView** ModelClass::GetTextureArray()
 	return m_TextureArray->GetTextureArray();
 }
 
+ID3D11ShaderResourceView* ModelClass::GetTexture()
+{
+	return m_TextureArray->GetTexture();
+}
+
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {
@@ -201,9 +206,16 @@ bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* file
 	return m_TextureArray->Initialize(device, filename1, filename2, filename3);
 }
 
-bool ModelClass::LoadTexture(ID3D11Device *, WCHAR *)
+bool ModelClass::LoadTexture(ID3D11Device *device, WCHAR *filename1)
 {
-	return false;
+	m_TextureArray = new TextureArrayClass;
+	if (!m_TextureArray)
+	{
+		return false;
+	}
+
+	// 텍스처 오브젝트를 초기화한다.
+	return m_TextureArray->Initialize(device, filename1);
 }
 
 

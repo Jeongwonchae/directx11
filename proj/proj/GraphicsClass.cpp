@@ -262,32 +262,28 @@ bool GraphicsClass::Frame(int fps, int cpu, float frameTime, float rotationY)
 
 bool GraphicsClass::Render()
 {
-	//float positionX = 0;
-	//float positionY = 0;
-	//float positionZ = 0;
-	//float radius = 1.0f;
-	//XMFLOAT4 color;
-
 	float fogColor = 0.5f;
 
 	float fogStart = 0.0f;
 	float fogEnd = 5.0f;
 
 	//전체 장면을 텍스처로 렌더링
-	if (!RenderToTexture())
-	{
-		return false;
-	}
+	//if (!RenderToTexture())
+	//{
+	//	return false;
+	//}
 
 	// 씬을 그리기 위해 버퍼를 지웁니다
-	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
+	m_Direct3D->BeginScene(fogColor, fogColor, fogColor, 1.0f);
 
-	if (!RenderScene())
-	{
-		return false;
-	}
+	//if (!RenderScene())
+	//{
+	//	return false;
+	//}
 
-	m_Direct3D->TurnZBufferOff();
+	m_Camera->Render();
+
+	//m_Direct3D->TurnZBufferOff();
 
 	// Turn on the alpha blending before rendering the text.
 	m_Direct3D->TurnOnAlphaBlending();
@@ -299,12 +295,22 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 100, 100))
+	//if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 100, 100))
+	//{
+	//	return false;
+	//}
+	static float rotation = 0.0f;
+	rotation += (float)XM_PI * 0.0025f;
+	if (rotation > 360.0f)
 	{
-		return false;
+		rotation -= 360.0f;
 	}
 
-	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_RenderTexture->GetShaderResourceView(), fogStart, fogEnd))
+	worldMatrix = XMMatrixRotationY(rotation);
+
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+
+	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(),m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), fogStart, fogEnd))
 	{
 		return false;
 	}
@@ -316,10 +322,10 @@ bool GraphicsClass::Render()
 	}
 
 	// Turn off alpha blending after rendering the text.
-	m_Direct3D->TurnOffAlphaBlending();
+	//m_Direct3D->TurnOffAlphaBlending();
 
 	// 모든 2D 렌더링이 완료되었으므로 Z 버퍼를 다시 켜십시오.
-	m_Direct3D->TurnZBufferOn();
+	//m_Direct3D->TurnZBufferOn();
 
 	// 버퍼의 내용을 화면에 출력합니다
 	m_Direct3D->EndScene();
