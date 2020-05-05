@@ -263,10 +263,6 @@ bool GraphicsClass::Frame(int fps, int cpu, float frameTime, float rotationY)
 
 bool GraphicsClass::Render()
 {
-	float fogColor = 0.5f;
-
-	float fogStart = 0.0f;
-	float fogEnd = 5.0f;
 
 	//전체 장면을 텍스처로 렌더링
 	if (!RenderToTexture())
@@ -275,7 +271,7 @@ bool GraphicsClass::Render()
 	}
 
 	// 씬을 그리기 위해 버퍼를 지웁니다
-	m_Direct3D->BeginScene(fogColor, fogColor, fogColor, 1.0f);
+	m_Direct3D->BeginScene(0.0f, 0.0f, 1.0f, 1.0f);
 
 	if (!RenderScene())
 	{
@@ -294,15 +290,15 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 100, 100))
-	{
-		return false;
-	}
+	//if (!m_DebugWindow->Render(m_Direct3D->GetDeviceContext(), 100, 100))
+	//{
+	//	return false;
+	//}
 
-	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_RenderTexture->GetShaderResourceView(), fogStart, fogEnd))
-	{
-		return false;
-	}
+	//if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_RenderTexture->GetShaderResourceView()))
+	//{
+	//	return false;
+	//}
 
 	// Render the text strings.
 	if (!m_Text->Render(m_Direct3D->GetDeviceContext(), worldMatrix, orthoMatrix))
@@ -340,10 +336,8 @@ bool GraphicsClass::RenderToTexture()
 
 bool GraphicsClass::RenderScene()
 {
-	float fogColor = 0.5f;
+	XMFLOAT4 clipPlane = XMFLOAT4(0.0f, -1.0f, 0.0f, 0.0f);
 
-	float fogStart = 0.0f;
-	float fogEnd = 5.0f;
 	// 카메라의 위치에 따라 뷰 행렬을 생성합니다
 	m_Camera->Render();
 
@@ -368,12 +362,9 @@ bool GraphicsClass::RenderScene()
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	if (!m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), fogStart, fogEnd))
-	{
-		return false;
-	}
+	return m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), clipPlane);
 
-	return m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
+	/*return m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
 			m_Light->GetDirection(), m_Light->GetDiffuseColor(),
-			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());*/
 }

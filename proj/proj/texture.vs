@@ -1,4 +1,4 @@
-cbuffer PerFrameBuffer
+cbuffer MatrixBuffer
 {
 	matrix worldMatrix;
 	matrix viewMatrix;
@@ -6,10 +6,9 @@ cbuffer PerFrameBuffer
 };
 
 
-cbuffer FogBuffer
+cbuffer ClipPlaneBuffer
 {
-	float fogStart;
-	float fogEnd;
+	float4 clipPlane;
 };
 
 struct VertexInputType
@@ -22,13 +21,12 @@ struct PixelInputType
 {
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
-	float fogFactor : FOG;
+	float clip : SV_ClipDistance0;
 };
 
 PixelInputType TextureVertexShader(VertexInputType input)
 {
 	PixelInputType output;
-	float4 cameraPosition;
     
 
     input.position.w = 1.0f;
@@ -38,11 +36,8 @@ PixelInputType TextureVertexShader(VertexInputType input)
     output.position = mul(output.position, projectionMatrix);
     
 	output.tex = input.tex;
+	
+	output.clip = dot(mul(input.position, worldMatrix), clipPlane);
 
-	cameraPosition = mul(input.position, worldMatrix);
-	cameraPosition = mul(cameraPosition, viewMatrix);
-
-	output.fogFactor = saturate((fogEnd - cameraPosition.z)/(fogEnd-fogStart));
-    
     return output;
 }

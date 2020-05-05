@@ -53,10 +53,10 @@ bool TextureShaderClass::FontRender(ID3D11DeviceContext* deviceContext, int inde
 }
 
 bool TextureShaderClass::TextureRender(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float fogStart, float fogEnd)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 clipPlane)
 {
 	// 렌더링에 사용할 셰이더 매개 변수를 설정합니다.
-	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, fogStart, fogEnd))
+	if (!TextureSetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, clipPlane))
 	{
 		return false;
 	}
@@ -490,8 +490,8 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	return true;
 }
 
-bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float fogStart, float fogEnd)
+bool TextureShaderClass::TextureSetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 clipPlane)
 {
 
 	// 상수 버퍼의 내용을 쓸 수 있도록 잠금
@@ -533,8 +533,7 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	PixelBufferType* dataPtr2 = (PixelBufferType*)mappedResource.pData;
 
-	dataPtr2->fogStart = fogStart;
-	dataPtr2->fogEnd = fogEnd;
+	dataPtr2->clipPlane = clipPlane;
 
 	deviceContext->Unmap(m_pixelBuffer, 0);
 
