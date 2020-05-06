@@ -15,12 +15,6 @@ private:
 		XMFLOAT4 pixelColor;
 	};
 
-	struct PixelBufferType
-	{
-		float translation;
-		XMFLOAT3 padding;
-	};
-
 public:
 	TextureShaderClass();
 	TextureShaderClass(const TextureShaderClass&);
@@ -30,7 +24,7 @@ public:
 	bool TextureInitialize(ID3D11Device*, HWND);
 	void Shutdown();
 	bool FontRender(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT4);
-	bool TextureRender(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, float);
+	bool TextureRender(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*);
 
 private:
 	bool FontInitializeShader(ID3D11Device*, HWND, WCHAR*, WCHAR*);
@@ -39,7 +33,7 @@ private:
 	void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
 
 	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT4);
-	bool TextureSetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, float);
+	bool TextureSetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*);
 	void RenderShader(ID3D11DeviceContext*, int);
 
 private:

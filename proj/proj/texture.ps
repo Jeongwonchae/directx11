@@ -1,11 +1,6 @@
 Texture2D shaderTexture;
 SamplerState SampleType;
 
-cbuffer TranslationBuffer
-{
-	float textureTranslation;
-};
-
 struct PixelInputType
 {
     float4 position : SV_POSITION;
@@ -14,7 +9,5 @@ struct PixelInputType
 
 float4 TexturePixelShader(PixelInputType input) : SV_TARGET
 {
-	input.tex.x += textureTranslation;
-
-	return shaderTexture.Sample(SampleType, input.tex);
+		return shaderTexture.Sample(SampleType, input.tex);
 }

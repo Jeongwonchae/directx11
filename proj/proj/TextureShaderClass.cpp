@@ -53,10 +53,10 @@ bool TextureShaderClass::FontRender(ID3D11DeviceContext* deviceContext, int inde
 }
 
 bool TextureShaderClass::TextureRender(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float translation)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
 {
 	// 렌더링에 사용할 셰이더 매개 변수를 설정합니다.
-	if (!TextureSetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, translation))
+	if (!TextureSetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture))
 	{
 		return false;
 	}
@@ -352,29 +352,12 @@ bool TextureShaderClass::TextureInitializeShader(ID3D11Device* device, HWND hwnd
 		return false;
 	}
 
-	// Setup the description of the dynamic pixel constant buffer that is in the pixel shader.
-	D3D11_BUFFER_DESC pixelBufferDesc;
-	pixelBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	pixelBufferDesc.ByteWidth = sizeof(PixelBufferType);
-	pixelBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	pixelBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	pixelBufferDesc.MiscFlags = 0;
-	pixelBufferDesc.StructureByteStride = 0;
-
-	// Create the pixel constant buffer pointer so we can access the pixel shader constant buffer from within this class.
-	result = device->CreateBuffer(&pixelBufferDesc, NULL, &m_pixelBuffer);
-	if (FAILED(result))
-	{
-		return false;
-	}
-
 	return true;
 }
 
 
 void TextureShaderClass::ShutdownShader()
 {
-	// Release the pixel constant buffer.
 	if (m_pixelBuffer)
 	{
 		m_pixelBuffer->Release();
@@ -492,48 +475,40 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 }
 
 bool TextureShaderClass::TextureSetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float translation)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
 {
 
-	worldMatrix = XMMatrixTranspose(worldMatrix);
-	viewMatrix = XMMatrixTranspose(viewMatrix);
-	projectionMatrix = XMMatrixTranspose(projectionMatrix);
-
+	// 상수 버퍼의 내용을 쓸 수 있도록 잠급니다.
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	if (FAILED(deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
 	{
 		return false;
 	}
 
+	// 상수 버퍼의 데이터에 대한 포인터를 가져옵니다.
 	MatrixBufferType* dataPtr = (MatrixBufferType*)mappedResource.pData;
 
+	// 행렬을 transpose하여 셰이더에서 사용할 수 있게 합니다
+	worldMatrix = XMMatrixTranspose(worldMatrix);
+	viewMatrix = XMMatrixTranspose(viewMatrix);
+	projectionMatrix = XMMatrixTranspose(projectionMatrix);
+
+	// 상수 버퍼에 행렬을 복사합니다.
 	dataPtr->world = worldMatrix;
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
 
+	// 상수 버퍼의 잠금을 풉니다.
 	deviceContext->Unmap(m_matrixBuffer, 0);
 
+	// 정점 셰이더에서의 상수 버퍼의 위치를 설정합니다.
 	unsigned int bufferNumber = 0;
 
+	// 마지막으로 정점 셰이더의 상수 버퍼를 바뀐 값으로 바꿉니다.
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
+	// 픽셀 셰이더에서 셰이더 텍스처 리소스를 설정합니다.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
-
-	if (FAILED(deviceContext->Map(m_pixelBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
-	{
-		return false;
-	}
-
-	PixelBufferType* dataPtr2 = (PixelBufferType*)mappedResource.pData;
-
-	dataPtr2->translation = translation;
-
-	deviceContext->Unmap(m_pixelBuffer, 0);
-
-	bufferNumber = 0;
-
-	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_pixelBuffer);
-
 	return true;
 }
 

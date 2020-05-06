@@ -1,6 +1,6 @@
-#include "stdafx.h"
+#include "Stdafx.h"
 #include "TextureArrayClass.h"
-#include "modelclass.h"
+#include "Modelclass.h"
 
 #include <fstream>
 using namespace std;
@@ -21,7 +21,7 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, char* modelfilename, WCHAR* texturefilename1, WCHAR* texturefilename2, WCHAR* texturefilename3)
+bool ModelClass::Initialize(ID3D11Device* device, char* modelfilename, WCHAR* texturefilename1)
 {
 	// 모델 데이터를 로드합니다.
 	if(!LoadModel(modelfilename))
@@ -36,7 +36,7 @@ bool ModelClass::Initialize(ID3D11Device* device, char* modelfilename, WCHAR* te
 	}
 
 	// 이 모델의 텍스처를 로드합니다.
-	return LoadTexture(device, texturefilename1, texturefilename2, texturefilename3);
+	return LoadTexture(device, texturefilename1);
 }
 
 

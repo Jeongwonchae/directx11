@@ -8,8 +8,7 @@
 #include "RenderTextureClass.h"
 #include "DebugWindowClass.h"
 #include "TextureShaderClass.h"
-//#include "ModelListClass.h"
-//#include "FrustumClass.h"
+#include "TransparentShaderClass.h"
 #include "graphicsclass.h"
 
 
@@ -53,7 +52,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// 카메라 포지션 설정
 	XMMATRIX baseViewMatrix;
-	m_Camera->SetPosition(0.0f, 0.0f, -1.0f);
+	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
 	m_Camera->Render();
 	m_Camera->GetViewMatrix(baseViewMatrix);
 
@@ -73,8 +72,15 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 
 	m_Model = new ModelClass;
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/cube.txt", (WCHAR*)L"../proj/data/stone02.dds",
-		(WCHAR*)L"../proj/data/bump02.dds", (WCHAR*)L"../proj/data/spec02.dds"))
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/square.txt", (WCHAR*)L"../proj/data/dirt01.dds"))
+		//(WCHAR*)L"../proj/data/bump02.dds", (WCHAR*)L"../proj/data/spec02.dds"))
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_Model2 = new ModelClass;
+	if (!m_Model2->Initialize(m_Direct3D->GetDevice(), (char*)"../proj/data/square.txt", (WCHAR*)L"../proj/data/stone01.dds"))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
@@ -138,23 +144,17 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	//m_ModelList = new ModelListClass;
-	//if (!m_ModelList)
-	//{
-	//	return false;
-	//}
+	m_TransparentShader = new TransparentShaderClass;
+	if (!m_TransparentShader)
+	{
+		return false;
+	}
 
-	//if (!m_ModelList->Initialize(25))
-	//{
-	//	MessageBox(hwnd, L"Could not initialize the model list object.", L"Error", MB_OK);
-	//	return false;
-	//}
-
-	//m_Frustum = new FrustumClass;
-	//if (!m_Frustum)
-	//{
-	//	return false;
-	//}
+	if (!m_TransparentShader->Initialize(m_Direct3D->GetDevice(), hwnd))
+	{
+		MessageBox(hwnd, L"Could not initialize the transparent shader object.", L"Error", MB_OK);
+		return false;
+	}
 
 	return true;
 }
@@ -162,18 +162,13 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::Shutdown()
 {
-	//if (m_Frustum)
-	//{
-	//	delete m_Frustum;
-	//	m_Frustum = 0;
-	//}
 
-	//if (m_ModelList)
-	//{
-	//	m_ModelList->Shutdown();
-	//	delete m_ModelList;
-	//	m_ModelList = 0;
-	//}
+	if (m_TransparentShader)
+	{
+		m_TransparentShader->Shutdown();
+		delete m_TransparentShader;
+		m_TransparentShader = 0;
+	}
 
 	if (m_TextureShader)
 	{
@@ -207,6 +202,13 @@ void GraphicsClass::Shutdown()
 		m_Shader->Shutdown();
 		delete m_Shader;
 		m_Shader = 0;
+	}
+
+	if (m_Model2)
+	{
+		m_Model2->Shutdown();
+		delete m_Model2;
+		m_Model2 = 0;
 	}
 
 	if (m_Model)
@@ -326,13 +328,7 @@ bool GraphicsClass::RenderToTexture()
 
 bool GraphicsClass::RenderScene()
 {
-	static float textureTranslation = 0.0f;
-
-	textureTranslation += 0.005f;
-	if (textureTranslation > 1.0f)
-	{
-		textureTranslation -= 1.0f;
-	}
+	float blendAmout = 0.5f;
 
 	// 카메라의 위치에 따라 뷰 행렬을 생성합니다
 	m_Camera->Render();
@@ -345,20 +341,13 @@ bool GraphicsClass::RenderScene()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-
-	//각 프레임의 rotation 변수를 업데이트
-	static float rotation = 0.0f;
-	rotation += (float)XM_PI * 0.0025f;
-	if (rotation > 360.0f)
-	{
-		rotation -= 360.0f;
-	}
-
-	worldMatrix = XMMatrixRotationY(rotation);
-
 	m_Model->Render(m_Direct3D->GetDeviceContext());
+	
+	m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
 
-	return m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), textureTranslation);
+	m_Model2->Render(m_Direct3D->GetDeviceContext());
+
+	return m_TransparentShader->Render(m_Direct3D->GetDeviceContext(), m_Model2->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), blendAmout);
 
 	/*return m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
 			m_Light->GetDirection(), m_Light->GetDiffuseColor(),
