@@ -16,7 +16,7 @@ float4 MyPixelShader(PixelInputType input) : SV_TARGET
 {
 	float4 color;
 
-	shaderTexture.Sample(SampleType, input.tex);
+	color = shaderTexture.Sample(SampleType, input.tex);
 
 	color.a = blendAmount;
 

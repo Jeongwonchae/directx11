@@ -345,10 +345,17 @@ bool GraphicsClass::RenderScene()
 	
 	m_TextureShader->TextureRender(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
 
+	worldMatrix = XMMatrixTranslation(1.0f, 0.0f, -1.0f);
+
+	m_Direct3D->TurnOnAlphaBlending();
+
 	m_Model2->Render(m_Direct3D->GetDeviceContext());
 
-	return m_TransparentShader->Render(m_Direct3D->GetDeviceContext(), m_Model2->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), blendAmout);
+	m_TransparentShader->Render(m_Direct3D->GetDeviceContext(), m_Model2->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model2->GetTexture(), blendAmout);
 
+	m_Direct3D->TurnOffAlphaBlending();
+
+	return true;
 	/*return m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTextureArray(),
 			m_Light->GetDirection(), m_Light->GetDiffuseColor(),
 			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());*/
