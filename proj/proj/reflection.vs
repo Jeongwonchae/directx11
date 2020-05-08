@@ -25,7 +25,7 @@ struct PixelInputType
 
 PixelInputType Reflection(VertexInputType input)
 {
-	PixelInputType ouput;
+	PixelInputType output;
 	matrix reflectProjectWorld;
 
 	input.position.w = 1.0f;
@@ -33,6 +33,8 @@ PixelInputType Reflection(VertexInputType input)
 	output.position = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
+
+	output.tex = input.tex;
 
 	reflectProjectWorld = mul(reflectionMatrix, projectionMatrix);
 	reflectProjectWorld = mul(worldMatrix, reflectProjectWorld);

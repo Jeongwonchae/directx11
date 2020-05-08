@@ -14,7 +14,7 @@ class LightClass;
 class RenderTextureClass;
 class DebugWindowClass;
 class TextureShaderClass;
-class TransparentShaderClass;
+class ReflectionShaderClass;
 
 class GraphicsClass
 {
@@ -36,14 +36,14 @@ private:
 	D3DClass* m_Direct3D = nullptr;
 	CameraClass* m_Camera = nullptr;
 	ModelClass* m_Model = nullptr;
-	ModelClass* m_Model2 = nullptr;
+	ModelClass* m_FloorModel = nullptr;
 	ShaderClass* m_Shader = nullptr;
 	TextClass* m_Text = nullptr;
 	LightClass* m_Light = nullptr;
 	RenderTextureClass* m_RenderTexture = nullptr;
 	DebugWindowClass* m_DebugWindow = nullptr;
 	TextureShaderClass* m_TextureShader = nullptr;
-	TransparentShaderClass* m_TransparentShader = nullptr;
+	ReflectionShaderClass* m_ReflectionSahder = nullptr;
 
 };
 
